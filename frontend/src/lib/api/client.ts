@@ -104,6 +104,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     const payload = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
+      if (response.status >= 500) {
+        console.warn(`[NIDHISETU API] Live backend returned ${response.status} at ${path}, falling back to local engine`);
+        return (await handleMockApiRequest(path, options)) as T;
+      }
       const error = typeof payload === "object" && payload !== null ? payload.error : undefined;
       if (response.status === 401 && !path.startsWith("/auth/")) {
         window.dispatchEvent(new CustomEvent("koshsetu:unauthenticated"));
