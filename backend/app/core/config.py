@@ -100,7 +100,7 @@ class Settings(BaseSettings):
     auto_create_schema: bool | None = None
     # Shared secret for the bootstrap and scheduled-task routes. CRON_SECRET is
     # read as a fallback because schedulers commonly set that name.
-    bootstrap_secret: str = Field(default_factory=lambda: os.environ.get("CRON_SECRET", ""))
+    bootstrap_secret: str = Field(default_factory=lambda: os.environ.get("CRON_SECRET", "").strip())
 
     @field_validator("storage_root")
     @classmethod
