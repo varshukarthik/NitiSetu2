@@ -1,6 +1,6 @@
-# Dependencies for the serverless deployment. Mirrors backend/requirements.txt,
-# plus the PostgreSQL driver, and without the local test tooling.
+# Production serverless and container dependencies
 fastapi==0.115.6
+uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
 pydantic==2.10.4
 pydantic-settings==2.7.0
@@ -10,3 +10,17 @@ python-multipart==0.0.20
 pypdf==5.1.0
 PyYAML==6.0.2
 psycopg[binary]==3.2.3
+
+# Cryptography & High-Assurance Forensics
+cryptography>=41.0.0
+pyHanko>=0.20.0
+pyhanko-certvalidator>=0.26.0
+qrcode>=7.4
+pillow>=10.0.0
+argon2-cffi>=23.1.0
+pyotp>=2.9.0
+
+# Cloud S3 Storage Vault & OCR Document Processing
+boto3>=1.34.0
+pdfplumber>=0.11.0
+pypdfium2>=4.30.0
