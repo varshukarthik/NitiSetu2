@@ -24,12 +24,7 @@
       }
     }
   ],
-  "crons": [
-    {
-      "path": "/api/v1/ops/cron/maturity-scan",
-      "schedule": "0 2 * * *"
-    }
-  ],
+  
   "headers": [
     {
       "source": "/(.*)",
