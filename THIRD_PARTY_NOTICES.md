@@ -43,3 +43,17 @@ NIDHISETU incorporates, adapts, and builds upon components from the following op
 - **Lucide Icons:** ISC License
 - **Tailwind CSS:** MIT License
 - **Recharts:** MIT License
+
+
+---
+
+## 4. Upgraded Case Management & Reports Reference: nidhisetu2
+- **Origin Repository:** `https://github.com/Gundoju-Manivardhan/nidhisetu2`
+- **Authors/Maintainers:** Gundoju Manivardhan & contributors
+- **License:** MIT License
+- **Usage & Modifications in NIDHISETU:**
+  - Integrated updated official case management views (`ReleaseCasePage.tsx` with clearance matrix sanction order flow).
+  - Integrated statutory reports compilation and aggregation view (`ReportsPage.tsx` with CSV export and print capabilities).
+  - Adopted safety guards in `WorkQueuePage.tsx` for array checks.
+  - Connected frontend to the real backend database with smart dual-mode fallback (`mockEngine.ts` / `mockData.ts`) in `client.ts`.
+  - Backed statutory report views with live database aggregation endpoints in `dashboards.py`.

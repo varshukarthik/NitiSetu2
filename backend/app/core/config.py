@@ -75,11 +75,23 @@ class Settings(BaseSettings):
     aes_master_key_hex: str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     mock_bank_enabled: bool = True
 
-    storage_backend: str = Field(default="filesystem", pattern="^(filesystem|database)$")
+    # Storage: local filesystem, database, or S3-compatible cloud object store
+    storage_backend: str = Field(default="filesystem", pattern="^(filesystem|database|s3)$")
     storage_root: Path = Path("./data/objects")
+    s3_bucket_name: str = "nidhisetu-vault"
+    s3_endpoint_url: str | None = None
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
+    aws_region: str = "ap-south-1"
+    s3_use_ssl: bool = True
 
     max_upload_bytes: int = 10 * 1024 * 1024
-    allowed_content_types: tuple[str, ...] = ("application/pdf",)
+    allowed_content_types: tuple[str, ...] = (
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+    )
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     expose_docs: bool = True
 
@@ -101,9 +113,22 @@ class Settings(BaseSettings):
             ("environment", "KOSHSETU_ENVIRONMENT"),
             ("jwt_secret", "KOSHSETU_JWT_SECRET"),
             ("fdr_hmac_key", "KOSHSETU_FDR_HMAC_KEY"),
+            ("storage_backend", "KOSHSETU_STORAGE_BACKEND"),
         ]:
             if os.environ.get(key) and (not os.environ.get(f"NIDHISETU_{field.upper()}")):
                 object.__setattr__(self, field, os.environ[key])
+
+        # S3 fallback env variables
+        if os.environ.get("AWS_S3_BUCKET") and not self.s3_bucket_name:
+            object.__setattr__(self, "s3_bucket_name", os.environ["AWS_S3_BUCKET"])
+        if os.environ.get("AWS_ACCESS_KEY_ID") and not self.aws_access_key_id:
+            object.__setattr__(self, "aws_access_key_id", os.environ["AWS_ACCESS_KEY_ID"])
+        if os.environ.get("AWS_SECRET_ACCESS_KEY") and not self.aws_secret_access_key:
+            object.__setattr__(self, "aws_secret_access_key", os.environ["AWS_SECRET_ACCESS_KEY"])
+        if os.environ.get("AWS_REGION") and not self.aws_region:
+            object.__setattr__(self, "aws_region", os.environ["AWS_REGION"])
+        if os.environ.get("S3_ENDPOINT_URL") and not self.s3_endpoint_url:
+            object.__setattr__(self, "s3_endpoint_url", os.environ["S3_ENDPOINT_URL"])
 
         url = (
             self.database_url
@@ -157,7 +182,7 @@ def get_settings() -> Settings:
         if cfg.storage_backend == "filesystem":
             raise RuntimeError(
                 "This runtime has no durable filesystem. Set "
-                "KOSHSETU_STORAGE_BACKEND=database so uploaded documents survive."
+                "NIDHISETU_STORAGE_BACKEND=database or NIDHISETU_STORAGE_BACKEND=s3 so uploaded documents survive."
             )
         if cfg.is_sqlite:
             raise RuntimeError(

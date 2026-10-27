@@ -1,11 +1,12 @@
-// Release case detail.
-//
-// Prepare, review and final approval are separated, every prerequisite is
-// listed with its current state, and the approve control stays disabled while
-// anything blocks it — with the reasons visible rather than hidden.
-
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  FileText,
+  UserCheck,
+} from "lucide-react";
 
 import { ClearanceMatrix } from "../../components/release/ClearanceMatrix";
 import { Dialog } from "../../components/ui/dialog";
@@ -14,7 +15,6 @@ import {
   Badge,
   Button,
   Card,
-  DefinitionList,
   ErrorState,
   Field,
   LoadingBlock,
@@ -22,9 +22,7 @@ import {
   Select,
   StatusBadge,
   TextArea,
-  TextInput,
 } from "../../components/ui/primitives";
-import { ApiError } from "../../lib/api/client";
 import {
   useDecideClearance,
   useReleaseAction,
@@ -34,111 +32,192 @@ import { useSession } from "../../lib/auth/session";
 import { dateTime, longDate, money } from "../../lib/format";
 
 export function ReleaseCasePage() {
-  const { requestId } = useParams<{ requestId: string }>();
+  const { requestId } = useParams();
+  // const navigate = useNavigate();
   const { session } = useSession();
-  const query = useReleaseRequest(requestId);
 
-  const [clearanceBureau, setClearanceBureau] = useState<string | null>(null);
+  const { data: rel, isLoading, error } = useReleaseRequest(requestId);
+  // const policy = useReleasePolicy();
+
+  const decideClearance = useDecideClearance(requestId ?? "");
+  const prepareAction = useReleaseAction(requestId ?? "", "prepare");
+  const approveAction = useReleaseAction(requestId ?? "", "approve");
+  const rejectAction = useReleaseAction(requestId ?? "", "reject");
+
+  // Clearance modal
+  const [activeBureau, setActiveBureau] = useState<string | null>(null);
   const [clearanceOutcome, setClearanceOutcome] = useState("CLEARED");
   const [clearanceReason, setClearanceReason] = useState("");
-  const [validUntil, setValidUntil] = useState("");
-  const [decision, setDecision] = useState<"prepare" | "approve" | "reject" | null>(null);
+  const [clearanceError, setClearanceError] = useState<string | null>(null);
+
+  // Decision modal
+  const [showDecisionModal, setShowDecisionModal] = useState<"approve" | "reject" | null>(null);
   const [decisionReason, setDecisionReason] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [decisionError, setDecisionError] = useState<string | null>(null);
 
-  const decide = useDecideClearance(requestId ?? "");
-  const prepare = useReleaseAction(requestId ?? "", "prepare");
-  const approve = useReleaseAction(requestId ?? "", "approve");
-  const reject = useReleaseAction(requestId ?? "", "reject");
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-4xl p-8">
+        <LoadingBlock label="Loading release dossier" />
+      </div>
+    );
+  }
 
-  if (query.isLoading) return <LoadingBlock label="Loading release case" />;
-  if (query.isError) {
-    const caught = query.error;
-    if (caught instanceof ApiError && (caught.status === 403 || caught.status === 404)) {
-      return (
-        <Alert tone="danger" title="This case is not available to you">
-          You do not have permission to view or change this record.
-        </Alert>
+  if (error || !rel) {
+    return (
+      <div className="mx-auto max-w-3xl p-8">
+        <ErrorState error={error ?? new Error("Release case not found")} onRetry={() => window.location.reload()} />
+      </div>
+    );
+  }
+
+  const isOfficial = session?.workspace === "official" || session?.workspace === "admin";
+  const userBureaus = session?.bureau_codes ?? [];
+  const canClearBureau = (bureauCode: string) => {
+    if (!isOfficial) return false;
+    if (userBureaus.includes("ALL")) return true;
+    return userBureaus.includes(bureauCode);
+  };
+
+  const isPrepared = Boolean(rel.prepared_by);
+  const isPreparer = rel.prepared_by === session?.email;
+  const canPrepare =
+    isOfficial &&
+    !isPrepared &&
+    rel.clearances.every((c) => c.state === "CLEARED") &&
+    session?.capabilities.includes("release:prepare");
+
+  const canApprove =
+    isOfficial &&
+    isPrepared &&
+    !isPreparer && // Two-person rule!
+    session?.capabilities.includes("release:approve") &&
+    rel.status !== "APPROVED" &&
+    rel.status !== "REJECTED";
+
+  async function handleClearanceSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!activeBureau) return;
+    setClearanceError(null);
+    try {
+      await decideClearance.mutateAsync({
+        bureauCode: activeBureau,
+        outcome: clearanceOutcome,
+        reason: clearanceReason.trim(),
+      });
+      setActiveBureau(null);
+      setClearanceReason("");
+    } catch (err: unknown) {
+      const e = err as Error;
+      setClearanceError(
+        e.message || "Failed to record clearance decision. Verify your bureau assignment.",
       );
     }
-    return <ErrorState error={caught} onRetry={query.refetch} />;
   }
-  if (!query.data) return null;
 
-  const request = query.data;
-  const isOfficial = session?.workspace !== "institution";
-  const can = (capability: string) => Boolean(session?.capabilities.includes(capability));
-  const isDecided = ["APPROVED", "REJECTED", "CLOSED"].includes(request.status);
-
-  const mutation = decision === "prepare" ? prepare : decision === "approve" ? approve : reject;
-
-  async function runDecision() {
-    if (!decision) return;
-    setError(null);
+  async function handlePrepareCase() {
+    if (!rel) return;
     try {
-      await mutation.mutateAsync({ reason: decisionReason.trim(), expectedVersion: request.version });
-      setDecision(null);
+      await prepareAction.mutateAsync({
+        reason: "Case dossier prepared and submitted for final competent authority sanction.",
+        expectedVersion: rel.version,
+      });
+    } catch (err: unknown) {
+      const e = err as Error;
+      alert(e.message || "Case preparation could not be recorded.");
+    }
+  }
+
+  async function handleDecisionSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!rel) return;
+    setDecisionError(null);
+    const action = showDecisionModal;
+    if (!action) return;
+
+    try {
+      if (action === "approve") {
+        await approveAction.mutateAsync({
+          reason: decisionReason.trim() || "Release approved under Approval Process Handbook rules.",
+          expectedVersion: rel.version,
+        });
+      } else {
+        await rejectAction.mutateAsync({
+          reason: decisionReason.trim() || "Release rejected.",
+          expectedVersion: rel.version,
+        });
+      }
+      setShowDecisionModal(null);
       setDecisionReason("");
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "The decision could not be recorded.");
+    } catch (err: unknown) {
+      const e = err as Error;
+      setDecisionError(e.message || "Decision could not be registered.");
     }
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Link
+          to={isOfficial ? "/official/releases" : "/institution/releases"}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted hover:text-brand"
+        >
+          <ArrowLeft className="size-4" />
+          Back to release cases
+        </Link>
+      </div>
+
       <PageHeader
-        title={`Release case ${request.id.slice(0, 8)}`}
-        description={`${request.institution_name} · instrument ${request.fdr_number_masked} · ${request.basis_label}`}
+        title={`Release Case ${rel.id.slice(0, 14)}`}
+        description={`${rel.institution_name} · ${rel.basis_label} · Instrument ${rel.fdr_number_masked}`}
         meta={
-          <>
-            <span className="tabular font-medium text-ink">{money(request.principal_amount)}</span>
-            <span>Matured / matures {longDate(request.maturity_date)}</span>
-            <span>Opened {dateTime(request.created_at)}</span>
-            <span>Version {request.version}</span>
-            <span>Policy {request.policy_version}</span>
-          </>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge dimension="release" value={rel.status} />
+            <span className="text-xs text-ink-muted">· Policy v{rel.policy_version}</span>
+            <span className="text-xs text-ink-muted">· Case v{rel.version}</span>
+          </div>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Link to={`${isOfficial ? "/official" : "/institution"}/fdrs/${request.fdr_id}`}>
-              <Button variant="secondary">Open the instrument</Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to={`/official/fdrs/${rel.fdr_id}`}
+              className="inline-flex items-center rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink hover:bg-subtle"
+            >
+              <FileText className="mr-1.5 size-4 text-brand" />
+              View deposit instrument
             </Link>
-            {can("release:prepare") && !isDecided && (
+
+            {canPrepare && (
               <Button
-                variant="secondary"
-                onClick={() => {
-                  setDecision("prepare");
-                  setDecisionReason("");
-                }}
+                variant="primary"
+                loading={prepareAction.isPending}
+                onClick={handlePrepareCase}
               >
+                <UserCheck className="mr-1.5 size-4" />
                 Record case preparation
               </Button>
             )}
-            {can("release:approve") && !isDecided && (
+
+            {canApprove && (
               <>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setDecisionError(null);
+                    setShowDecisionModal("approve");
+                  }}
+                >
+                  <CheckCircle2 className="mr-1.5 size-4" />
+                  Final approval
+                </Button>
                 <Button
                   variant="danger"
                   onClick={() => {
-                    setDecision("reject");
-                    setDecisionReason("");
+                    setDecisionError(null);
+                    setShowDecisionModal("reject");
                   }}
                 >
-                  Reject
-                </Button>
-                <Button
-                  variant="primary"
-                  disabled={!request.can_finally_approve}
-                  title={
-                    request.can_finally_approve
-                      ? undefined
-                      : "Blocked: " + request.blocking_reasons.join(" ")
-                  }
-                  onClick={() => {
-                    setDecision("approve");
-                    setDecisionReason("");
-                  }}
-                >
-                  Final approval
+                  Reject release
                 </Button>
               </>
             )}
@@ -146,314 +225,239 @@ export function ReleaseCasePage() {
         }
       />
 
-      {error && (
-        <Alert tone="danger" title="The decision was not recorded" className="mb-4">
-          {error}
+      {/* Two-person rule notice */}
+      {isPrepared && isPreparer && rel.status !== "APPROVED" && (
+        <Alert tone="warning" title="Two-person separation rule active">
+          You prepared this release case ({rel.prepared_by}). Under regulatory governance, a different competent
+          authority must perform final approval.
         </Alert>
       )}
 
-      {request.hold_reason && (
-        <Alert tone="danger" title="This case is on hold" className="mb-4">
-          {request.hold_reason}
-        </Alert>
-      )}
-
-      {!isDecided && request.blocking_reasons.length > 0 && (
-        <Alert tone="warning" title="The request cannot proceed yet" className="mb-4">
-          <ul className="list-disc space-y-0.5 pl-5">
-            {request.blocking_reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
+      {/* Blocking reasons alert */}
+      {rel.blocking_reasons && rel.blocking_reasons.length > 0 && rel.status !== "APPROVED" && (
+        <Alert tone="neutral" title="Steps required before final release decision">
+          <ul className="list-inside list-disc space-y-1 text-xs">
+            {rel.blocking_reasons.map((r, idx) => (
+              <li key={idx}>{r}</li>
             ))}
           </ul>
         </Alert>
       )}
 
-      {request.status === "APPROVED" && (
-        <Alert tone="success" title="Release request approved" className="mb-4">
-          This records an administrative approval on {dateTime(request.decided_at)}. It is not a
-          confirmation that a bank has released or refunded any amount — that remains separate
-          evidence this portal may never receive.
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.25fr_1fr]">
-        <div className="space-y-5">
-          <Card title="Case summary">
-            <DefinitionList
-              items={[
-                { label: "Status", value: <StatusBadge dimension="release" value={request.status} /> },
-                { label: "Basis", value: request.basis_label },
-                { label: "Requested by", value: request.requested_by_label },
-                {
-                  label: "Prepared by (maker)",
-                  value: request.prepared_by ? "Recorded" : "Not yet recorded",
-                  help: "The preparing officer cannot be the final approver.",
-                },
-                {
-                  label: "Approved by (checker)",
-                  value: request.approved_by ? "Recorded" : "Not yet recorded",
-                },
-                { label: "Checklist version", value: request.policy_version },
-              ]}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Left Column: Clearances & Checklist (7 cols) */}
+        <div className="space-y-6 lg:col-span-7">
+          {/* Clearance Matrix */}
+          <Card
+            title="Multi-Bureau Clearance Matrix"
+            description="Statutory clearances required across autonomous AICTE bureaus before any deposit release."
+          >
+            <ClearanceMatrix
+              clearances={rel.clearances}
+              canDecide={canClearBureau}
+              onDecide={(bureau) => {
+                setActiveBureau(bureau);
+                setClearanceError(null);
+                setClearanceOutcome("CLEARED");
+                setClearanceReason("");
+              }}
             />
-            <div className="mt-4 rounded-lg bg-subtle p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Justification from the institution
-              </p>
-              <p className="mt-1 text-sm text-ink">{request.justification}</p>
-            </div>
           </Card>
 
+          {/* Checklist & Required Documents */}
           <Card
-            title="Prescribed documents"
-            description="Instantiated from the checklist version in force when the case was opened."
+            title="Required statutory documentation"
+            description="Documentation mandated by the Approval Process Handbook for this release basis."
           >
-            <ul className="space-y-2">
-              {request.checklist.map((item) => (
-                <li
-                  key={item.code}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium text-ink">{item.label}</p>
-                    <p className="text-xs text-ink-muted">{item.code}</p>
+            <ul className="divide-y divide-line">
+              {rel.checklist.map((doc) => (
+                <li key={doc.code} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-center gap-2.5">
+                    {doc.satisfied ? (
+                      <CheckCircle2 className="size-4 text-success" />
+                    ) : (
+                      <AlertCircle className="size-4 text-warning" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-ink">{doc.label}</p>
+                      <p className="text-xs text-ink-muted">Code: {doc.code}</p>
+                    </div>
                   </div>
-                  <Badge tone={item.satisfied ? "success" : "warning"}>
-                    {item.satisfied ? "On record" : "Missing"}
+                  <Badge tone={doc.satisfied ? "success" : "warning"}>
+                    {doc.satisfied ? "Verified" : "Pending"}
                   </Badge>
                 </li>
               ))}
             </ul>
           </Card>
-
-          {request.approvals.length > 0 && (
-            <Card title="Decision trail">
-              <ol className="space-y-2.5">
-                {request.approvals.map((approval) => (
-                  <li key={approval.id} className="rounded-lg border border-line p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Badge
-                        tone={
-                          approval.outcome === "APPROVED"
-                            ? "success"
-                            : approval.outcome === "REJECTED"
-                              ? "danger"
-                              : "info"
-                        }
-                      >
-                        {approval.stage} · {approval.outcome.toLowerCase()}
-                      </Badge>
-                      <span className="text-xs text-ink-muted">{dateTime(approval.decided_at)}</span>
-                    </div>
-                    <p className="mt-1.5 text-sm text-ink">{approval.reason}</p>
-                    <p className="text-xs text-ink-muted">{approval.actor_label}</p>
-                  </li>
-                ))}
-              </ol>
-            </Card>
-          )}
         </div>
 
-        <div className="space-y-5">
-          <Card
-            title="Bureau clearances"
-            description="Each clearance carries its issuing authority, outcome, reason, recorded identity and validity."
-          >
-            <ClearanceMatrix
-              clearances={request.clearances}
-              canDecide={(bureauCode) =>
-                !isDecided &&
-                can("release:clear") &&
-                Boolean(session?.bureau_codes.includes(bureauCode))
-              }
-              onDecide={(bureauCode) => {
-                setClearanceBureau(bureauCode);
-                setClearanceOutcome("CLEARED");
-                setClearanceReason("");
-                setValidUntil("");
-              }}
-            />
-            {can("release:clear") && session?.bureau_codes.length === 0 && (
-              <p className="mt-3 text-xs text-ink-muted">
-                You are not assigned to any bureau on this case, so no clearance control is offered.
+        {/* Right Column: Case Summary & Governance (5 cols) */}
+        <div className="space-y-6 lg:col-span-5">
+          {/* Case Dossier Specs */}
+          <Card title="Release specifications" description="Requested terms and financial values.">
+            <dl className="grid grid-cols-2 gap-4">
+              <div>
+                <dt className="text-xs text-ink-muted">Principal Sum</dt>
+                <dd className="text-base font-bold text-ink tabular">{money(rel.principal_amount)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-muted">Basis of Release</dt>
+                <dd className="text-sm font-semibold text-ink">{rel.basis_label}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-muted">Requested By</dt>
+                <dd className="text-sm text-ink">{rel.requested_by_label}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-muted">Filing Date</dt>
+                <dd className="text-sm text-ink">{longDate(rel.created_at)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-muted">Case Preparer</dt>
+                <dd className="text-sm font-medium text-brand">
+                  {rel.prepared_by ? rel.prepared_by : "Pending preparation"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-muted">Final Approver</dt>
+                <dd className="text-sm font-medium text-ink">
+                  {rel.approved_by ? rel.approved_by : "Pending decision"}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="mt-4 border-t border-line pt-3">
+              <p className="text-xs text-ink-muted font-medium">Justification Statement:</p>
+              <p className="mt-1 text-xs text-ink italic bg-subtle p-2.5 rounded-lg">
+                "{rel.justification}"
               </p>
-            )}
+            </div>
           </Card>
 
-          <Card title="What final approval means here">
-            <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-muted">
-              <li>Every required clearance must be affirmative and current.</li>
-              <li>Every prescribed document must be on record and cleared by scanning.</li>
-              <li>No hold condition may remain.</li>
-              <li>The officer who prepared the case cannot approve it.</li>
-              <li>The institution's requester cannot approve it.</li>
-              <li>
-                The approval is recorded as <em>release request approved</em> — separate from any
-                bank-side discharge.
-              </li>
-            </ul>
+          {/* Decision Timeline */}
+          <Card title="Approvals & Sanctions" description="Formal signoffs recorded for this case.">
+            {rel.approvals.length === 0 ? (
+              <p className="text-sm text-ink-muted">Zero sanction records committed.</p>
+            ) : (
+              <div className="space-y-3">
+                {rel.approvals.map((appr) => (
+                  <div key={appr.id} className="rounded-lg bg-subtle p-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-ink">{appr.actor_label}</span>
+                      <StatusBadge dimension="release" value={appr.outcome} />
+                    </div>
+                    <p className="mt-1 text-xs text-ink">{appr.reason}</p>
+                    <p className="mt-1 text-[11px] text-ink-muted">{dateTime(appr.decided_at)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </div>
 
-      {/* --- clearance decision --- */}
+      {/* Dialog: Record Clearance */}
       <Dialog
-        open={Boolean(clearanceBureau)}
-        title={`Record the ${clearanceBureau} decision`}
-        description="Your identity, the reason and the time are stored against this requirement. An objection puts the case on hold."
-        onClose={() => setClearanceBureau(null)}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setClearanceBureau(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              loading={decide.isPending}
-              disabled={clearanceReason.trim().length < 5}
-              onClick={async () => {
-                setError(null);
-                try {
-                  await decide.mutateAsync({
-                    bureauCode: clearanceBureau!,
-                    outcome: clearanceOutcome,
-                    reason: clearanceReason.trim(),
-                    validUntil: validUntil || undefined,
-                  });
-                  setClearanceBureau(null);
-                } catch (caught) {
-                  setError(
-                    caught instanceof ApiError
-                      ? caught.message
-                      : "The clearance decision could not be recorded.",
-                  );
-                }
-              }}
-            >
-              Record decision
-            </Button>
-          </>
-        }
+        open={Boolean(activeBureau)}
+        title={`Record Clearance for ${activeBureau ?? ""}`}
+        onClose={() => setActiveBureau(null)}
       >
-        <div className="space-y-4">
-          <Field label="Outcome" required>
-            {(props) => (
-              <Select
-                {...props}
-                value={clearanceOutcome}
-                onChange={(event) => setClearanceOutcome(event.target.value)}
-              >
-                <option value="CLEARED">Cleared — no objection from this bureau</option>
-                <option value="CLARIFICATION_REQUIRED">Clarification required</option>
-                <option value="OBJECTION">Objection — place the case on hold</option>
-              </Select>
-            )}
-          </Field>
-          <Field label="Reason" required>
-            {(props) => (
-              <TextArea
-                {...props}
-                value={clearanceReason}
-                onChange={(event) => setClearanceReason(event.target.value)}
-                placeholder="What did this bureau check, and what is its conclusion?"
-              />
-            )}
-          </Field>
-          {clearanceOutcome === "CLEARED" && (
-            <Field label="Valid until" hint="Optional. A stale clearance is flagged for re-confirmation.">
-              {(props) => (
-                <TextInput
-                  {...props}
-                  type="date"
-                  value={validUntil}
-                  onChange={(event) => setValidUntil(event.target.value)}
-                />
-              )}
-            </Field>
-          )}
-        </div>
-      </Dialog>
+        <form onSubmit={handleClearanceSubmit} className="space-y-4">
+          <p className="text-sm text-ink-muted">
+            You are recording a statutory bureau clearance on behalf of {activeBureau}. This action will be immutably
+            logged to the SHA-256 audit ledger.
+          </p>
 
-      {/* --- prepare / approve / reject --- */}
-      <Dialog
-        open={Boolean(decision)}
-        title={
-          decision === "prepare"
-            ? "Record that you prepared this case"
-            : decision === "approve"
-              ? "Record final approval of this release request"
-              : "Reject this release request"
-        }
-        description={
-          decision === "approve"
-            ? "This records an administrative approval against the current case version. It does not instruct a bank and does not move money."
-            : decision === "prepare"
-              ? "You will be recorded as the preparing officer, and you will not be able to give this case its final approval."
-              : "The institution is notified and the case is closed as rejected."
-        }
-        onClose={() => setDecision(null)}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setDecision(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant={decision === "reject" ? "danger" : "primary"}
-              loading={mutation.isPending}
-              disabled={decisionReason.trim().length < 5}
-              onClick={() => void runDecision()}
-            >
-              {decision === "prepare"
-                ? "Record preparation"
-                : decision === "approve"
-                  ? "Record final approval"
-                  : "Record rejection"}
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <DefinitionList
-            columns={2}
-            items={[
-              { label: "Case", value: `${request.id.slice(0, 8)} · ${request.institution_name}` },
-              { label: "Instrument", value: request.fdr_number_masked },
-              { label: "Principal", value: money(request.principal_amount) },
-              { label: "Version you are acting on", value: String(request.version) },
-            ]}
-          />
-
-          {decision === "approve" && (
-            <Alert tone="info" title="Prerequisites verified at this moment">
-              <ul className="list-disc space-y-0.5 pl-5">
-                <li>All required clearances affirmative and current.</li>
-                <li>All prescribed documents on record.</li>
-                <li>No hold condition outstanding.</li>
-                <li>Maker and checker are different people.</li>
-              </ul>
-              <p className="mt-1">
-                They are checked again inside the transaction, so a change made while this dialog
-                was open will stop the approval.
-              </p>
+          {clearanceError && (
+            <Alert tone="danger" title="Permission or validation error">
+              {clearanceError}
             </Alert>
           )}
 
-          <Field
-            label="Reason / noting"
-            required
-            hint="Recorded immutably with your identity and the case version."
-          >
-            {(props) => (
+          <Field label="Clearance Outcome">
+            {(fieldProps) => (
+              <Select
+                {...fieldProps}
+                value={clearanceOutcome}
+                onChange={(e) => setClearanceOutcome(e.target.value)}
+              >
+                <option value="CLEARED">CLEARED — No objections or pending inquiries</option>
+                <option value="REJECTED">REJECTED — Inquiry or grievance outstanding</option>
+              </Select>
+            )}
+          </Field>
+
+          <Field label="Statutory Clearance Reason & Verification Notes">
+            {(fieldProps) => (
               <TextArea
-                {...props}
-                rows={4}
-                value={decisionReason}
-                onChange={(event) => setDecisionReason(event.target.value)}
+                {...fieldProps}
+                rows={3}
+                placeholder="State basis of clearance, reference numbers, or court/grievance search findings..."
+                value={clearanceReason}
+                onChange={(e) => setClearanceReason(e.target.value)}
+                required
               />
             )}
           </Field>
-        </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setActiveBureau(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" loading={decideClearance.isPending}>
+              Commit clearance
+            </Button>
+          </div>
+        </form>
       </Dialog>
-    </>
+
+      {/* Dialog: Final Decision */}
+      <Dialog
+        open={Boolean(showDecisionModal)}
+        title={showDecisionModal === "approve" ? "Final Competent Authority Sanction" : "Reject Release Case"}
+        onClose={() => setShowDecisionModal(null)}
+      >
+        <form onSubmit={handleDecisionSubmit} className="space-y-4">
+          <p className="text-sm text-ink-muted">
+            {showDecisionModal === "approve"
+              ? "Sanctioning this release marks the deposit instrument as RELEASED and discharges the regulatory lien."
+              : "Rejecting this case returns it to the applicant institution."}
+          </p>
+
+          {decisionError && (
+            <Alert tone="danger" title="Sanction error">
+              {decisionError}
+            </Alert>
+          )}
+
+          <Field label="Formal Sanction Order Notes">
+            {(fieldProps) => (
+              <TextArea
+                {...fieldProps}
+                rows={3}
+                placeholder="Enter regulatory sanction details, executive committee resolution ref, or rejection grounds..."
+                value={decisionReason}
+                onChange={(e) => setDecisionReason(e.target.value)}
+                required
+              />
+            )}
+          </Field>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setShowDecisionModal(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant={showDecisionModal === "approve" ? "primary" : "danger"}
+              type="submit"
+              loading={approveAction.isPending || rejectAction.isPending}
+            >
+              Confirm {showDecisionModal === "approve" ? "approval" : "rejection"}
+            </Button>
+          </div>
+        </form>
+      </Dialog>
+    </div>
   );
 }

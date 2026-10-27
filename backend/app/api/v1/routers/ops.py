@@ -113,6 +113,8 @@ def bootstrap(
 
 @router.post("/cron/maturity-scan")
 @router.get("/cron/maturity-scan")
+@router.post("/schedule")
+@router.get("/schedule")
 def scheduled_maturity_scan(
     db: DbSession,
     authorization: SecretHeader = None,
@@ -150,3 +152,9 @@ def operational_status(
             "audit_events": db.scalar(select(func.count(AuditEvent.id))) or 0,
         },
     }
+
+
+@router.get("/storage-health")
+def storage_health():
+    """Returns active storage backend status (S3 vs local), bucket, and encryption."""
+    return storage.get_storage_health()

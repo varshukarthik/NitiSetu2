@@ -84,3 +84,20 @@ To re-seed or reset the demonstration database at any time:
 ```powershell
 .\run-demo.ps1
 ```
+
+
+---
+
+### Cloud S3 Vault & OCR Engine Integration
+
+NIDHISETU includes built-in S3-compatible cloud storage and an advanced multi-layered OCR engine:
+
+- **S3-Compatible Object Store:**
+  - Configurable via `NIDHISETU_STORAGE_BACKEND=s3`, `NIDHISETU_S3_BUCKET_NAME`, `NIDHISETU_S3_ENDPOINT_URL`, and standard AWS credentials.
+  - Zero plaintext in the cloud: All documents are encrypted client-side using **AES-256-GCM** before uploading to S3, and authenticated on retrieval.
+  - Gracefully falls back to local encrypted disk if cloud credentials are not supplied.
+
+- **Multi-Layer OCR & Scrutiny Engine:**
+  - **Layer 1 (Native Digital Layout):** Uses `pdfplumber` and `pypdf` to extract exact text streams and character bounds.
+  - **Layer 2 (Visual Optical Character Recognition):** Uses `pypdfium2` / `Pillow` page rasterization with `pytesseract` and OpenCV image filtering for scanned documents.
+  - **Layer 3 (Indian Banking Regulatory Parser):** Extracts FDR Reference Numbers, Principal Amount in Indian numbering format (e.g. ₹25,00,000), Issue/Maturity dates, and AICTE Lien markings.

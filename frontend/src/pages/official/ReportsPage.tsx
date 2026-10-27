@@ -1,136 +1,126 @@
-// Reports. Each run shows its scope, run id and provenance watermark, and the
-// export is authorised again server-side before a row is written.
-
-import { Download } from "lucide-react";
 import { useState } from "react";
+import { Download, Printer } from "lucide-react";
 
 import {
-  Alert,
   Button,
   Card,
   ErrorState,
   LoadingBlock,
   PageHeader,
+  Select,
 } from "../../components/ui/primitives";
-import { DataTable, type Column } from "../../components/ui/table";
 import { useReport } from "../../lib/api/hooks";
-import { useSession } from "../../lib/auth/session";
 import { dateTime } from "../../lib/format";
 
-const REPORTS = [
-  {
-    key: "active-exposure",
-    title: "Active exposure by status",
-    description: "Every instrument in scope with its principal, maturity and separate status dimensions.",
-  },
-  {
-    key: "upcoming-maturities",
-    title: "Upcoming maturities (90 days)",
-    description: "Server-derived due windows with the days remaining and the current owner.",
-  },
-  {
-    key: "unresolved-findings",
-    title: "Unresolved findings",
-    description: "Open rule findings with their severity, class and the instrument they belong to.",
-  },
-  {
-    key: "clearance-backlog",
-    title: "Clearance backlog",
-    description: "Release cases with a bureau clearance that is not yet affirmative.",
-  },
+const REPORT_OPTIONS = [
+  { key: "maturity_schedule", label: "Maturity Schedule & Exposure" },
+  { key: "regional_distribution", label: "Regional Deposit Distribution" },
+  { key: "bank_concentration", label: "Bank Concentration & Institutional Holdings" },
 ];
 
 export function ReportsPage() {
-  const { session } = useSession();
-  const [active, setActive] = useState(REPORTS[0].key);
-  const query = useReport(active);
-  const canExport = session?.capabilities.includes("report:export");
+  const [selectedKey, setSelectedKey] = useState("maturity_schedule");
+  const { data: report, isLoading, error } = useReport(selectedKey);
 
-  const columns: Column<string[]>[] =
-    query.data?.columns.map((header, index) => ({
-      key: `${header}-${index}`,
-      header,
-      align: /principal|value|amount|remaining|instruments/i.test(header) ? "right" : "left",
-      sticky: index === 0,
-      render: (row) => <span className={index === 0 ? "font-medium" : undefined}>{row[index]}</span>,
-      sortValue: (row) => row[index] ?? "",
-    })) ?? [];
+  function exportCsv() {
+    if (!report) return;
+    const header = report.columns.join(",");
+    const rows = report.rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","));
+    const csvContent = "data:text/csv;charset=utf-8," + [header, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${selectedKey}_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function triggerPrint() {
+    window.print();
+  }
 
   return (
-    <>
+    <div className="space-y-6">
       <PageHeader
-        title="Reports"
-        description="Reproducible cuts of the records in your authorised scope. Every export is logged with who ran it and what it covered."
-      />
-
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {REPORTS.map((report) => (
-          <button
-            key={report.key}
-            type="button"
-            aria-pressed={active === report.key}
-            onClick={() => setActive(report.key)}
-            className={`rounded-lg border p-3.5 text-left ${
-              active === report.key ? "border-brand bg-brand/5" : "border-line bg-surface hover:bg-subtle"
-            }`}
-          >
-            <p className="font-semibold text-ink">{report.title}</p>
-            <p className="mt-0.5 text-xs text-ink-muted">{report.description}</p>
-          </button>
-        ))}
-      </div>
-
-      <Card
-        title={REPORTS.find((report) => report.key === active)?.title}
-        description={
-          query.data
-            ? `Scope: ${query.data.scope_label} · generated ${dateTime(query.data.generated_at)} · run ${query.data.report_run_id}`
-            : undefined
-        }
+        title="Statutory Reports & Aggregations"
+        description="Official compilations of institutional security deposits, bank exposures, and maturity trajectories."
         actions={
-          canExport ? (
-            <Button
-              variant="secondary"
-              icon={<Download aria-hidden="true" className="size-4" />}
-              onClick={() => {
-                window.location.href = `/api/v1/reports/${active}/export`;
-              }}
-            >
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={triggerPrint}>
+              <Printer className="mr-1.5 size-4" />
+              Print
+            </Button>
+            <Button variant="primary" onClick={exportCsv} disabled={!report}>
+              <Download className="mr-1.5 size-4" />
               Export CSV
             </Button>
-          ) : undefined
+          </div>
         }
-        bodyClassName=""
-      >
-        {query.isLoading ? (
-          <div className="p-5">
-            <LoadingBlock label="Running report" />
+      />
+
+      <div className="flex items-center gap-3">
+        <label className="text-sm font-semibold text-ink">Select Report:</label>
+        <div className="w-80">
+          <Select value={selectedKey} onChange={(e) => setSelectedKey(e.target.value)}>
+            {REPORT_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <Card title="Compiling report data" description="Querying records and aggregating balances...">
+          <div className="p-8">
+            <LoadingBlock label="Aggregating statutory report data" />
           </div>
-        ) : query.isError ? (
-          <div className="p-5">
-            <ErrorState error={query.error} onRetry={query.refetch} />
+        </Card>
+      ) : error || !report ? (
+        <ErrorState
+          error={error ?? new Error("Report data not available")}
+          onRetry={() => window.location.reload()}
+        />
+      ) : (
+        <Card
+          title={report.scope_label}
+          description={`Run ID: ${report.report_run_id} · Generated ${dateTime(report.generated_at)}`}
+        >
+          <div className="mb-4 flex items-center justify-between rounded-lg bg-subtle p-3 text-xs">
+            <span className="font-semibold text-ink-muted">Security Classification:</span>
+            <span className="rounded bg-brand/10 px-2 py-0.5 font-bold tracking-wider text-brand">
+              {report.watermark}
+            </span>
           </div>
-        ) : (
-          <>
-            <div className="px-4 pt-4 sm:px-5">
-              <Alert tone="simulated" title={query.data?.watermark}>
-                Exported copies carry this provenance line. Treat them as sensitive: they are not
-                redacted beyond what your scope already allows.
-              </Alert>
-            </div>
-            <div className="mt-4">
-              <DataTable
-                caption={REPORTS.find((report) => report.key === active)?.title ?? "Report"}
-                columns={columns}
-                rows={query.data?.rows ?? []}
-                rowKey={(row) => row.join("|")}
-                emptyTitle="This report has no rows in your scope"
-                footer={`${query.data?.rows.length ?? 0} rows.${canExport ? "" : " Your roles do not include export permission."}`}
-              />
-            </div>
-          </>
-        )}
-      </Card>
-    </>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-line bg-subtle text-xs font-semibold text-ink-muted">
+                <tr>
+                  {report.columns.map((col, idx) => (
+                    <th key={idx} className="p-3 first:pl-4 last:pr-4">
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {report.rows.map((row, rowIdx) => (
+                  <tr key={rowIdx} className="hover:bg-subtle/50">
+                    {row.map((cell, cellIdx) => (
+                      <td key={cellIdx} className="p-3 first:pl-4 last:pr-4 tabular text-ink">
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

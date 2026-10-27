@@ -1,12 +1,9 @@
 """Private object store facade.
 
-The backend is chosen by configuration, not by call sites: `filesystem` for a
-local run, `database` where the runtime has no durable disk. Both expose the
-same contract, so the upload, scan and download paths are identical either way.
-
-Callers pass the request's session where they have one. The filesystem backend
-ignores it; the database backend joins it, so the object and the row that
-references it share one transaction.
+The backend is chosen by configuration, not by call sites:
+- `filesystem`: local encrypted disk store
+- `database`: stores encrypted blobs inside relational DB
+- `s3`: AWS S3, MinIO, LocalStack, or Cloudflare R2 with client-side AES-256-GCM encryption
 """
 
 from __future__ import annotations
@@ -14,17 +11,19 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.infrastructure.storage import db_store, local_store
+from app.infrastructure.storage import db_store, local_store, s3_store
 
 QUARANTINE_PREFIX = local_store.QUARANTINE_PREFIX
 CLEAN_PREFIX = local_store.CLEAN_PREFIX
 REJECTED_PREFIX = local_store.REJECTED_PREFIX
 
 
-def _uses_database() -> bool:
-    if settings.storage_backend not in {"filesystem", "database"}:  # pragma: no cover
-        raise RuntimeError(f"Unknown storage backend: {settings.storage_backend}")
-    return settings.storage_backend == "database"
+def _backend():
+    if settings.storage_backend == "database":
+        return db_store
+    if settings.storage_backend == "s3":
+        return s3_store
+    return local_store
 
 
 def backend_name() -> str:
@@ -32,35 +31,56 @@ def backend_name() -> str:
 
 
 def build_quarantine_key(institution_id: str, extension: str = "pdf") -> str:
-    module = db_store if _uses_database() else local_store
-    return module.build_quarantine_key(institution_id, extension)
+    return _backend().build_quarantine_key(institution_id, extension)
 
 
 def put_object(key: str, payload: bytes, *, session: Session | None = None) -> int:
-    if _uses_database():
+    backend = _backend()
+    if backend is db_store:
         return db_store.put_object(key, payload, session=session)
-    return local_store.put_object(key, payload)
+    return backend.put_object(key, payload)
 
 
 def read_object(key: str, *, session: Session | None = None) -> bytes:
-    if _uses_database():
+    backend = _backend()
+    if backend is db_store:
         return db_store.read_object(key, session=session)
-    return local_store.read_object(key)
+    return backend.read_object(key)
 
 
 def object_exists(key: str, *, session: Session | None = None) -> bool:
-    if _uses_database():
+    backend = _backend()
+    if backend is db_store:
         return db_store.object_exists(key, session=session)
-    return local_store.object_exists(key)
+    return backend.object_exists(key)
 
 
 def object_size(key: str, *, session: Session | None = None) -> int:
-    if _uses_database():
+    backend = _backend()
+    if backend is db_store:
         return db_store.object_size(key, session=session)
-    return local_store.object_size(key)
+    return backend.object_size(key)
 
 
 def promote(key: str, *, to_prefix: str, session: Session | None = None) -> str:
-    if _uses_database():
+    backend = _backend()
+    if backend is db_store:
         return db_store.promote(key, to_prefix=to_prefix, session=session)
-    return local_store.promote(key, to_prefix=to_prefix)
+    return backend.promote(key, to_prefix=to_prefix)
+
+
+def get_storage_health() -> dict:
+    if settings.storage_backend == "s3":
+        return s3_store.check_s3_connection()
+    if settings.storage_backend == "database":
+        return {
+            "status": "HEALTHY",
+            "backend": "database",
+            "encryption": "AES-256-GCM",
+        }
+    return {
+        "status": "HEALTHY",
+        "backend": "filesystem",
+        "storage_root": str(settings.storage_root),
+        "encryption": "AES-256-GCM",
+    }

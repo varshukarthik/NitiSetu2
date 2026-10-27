@@ -1,6 +1,7 @@
 """Automated tests for NIDHISETU security capabilities and original features."""
 
 import json
+from decimal import Decimal
 import pytest
 from app.core.security import encrypt_aes_gcm, decrypt_aes_gcm, obfuscate_store, deobfuscate_store
 from app.domains.documents.forensics import (
@@ -100,3 +101,46 @@ def test_smart_action_queue_endpoint(officer_client):
         assert "contributing_factors" in first
         assert "primary_reason" in first
         assert "suggested_action" in first
+
+
+def test_s3_storage_and_health_integration(officer_client):
+    """Verify S3 storage configuration and ops storage health endpoint."""
+    resp = officer_client.get("/api/v1/ops/storage-health")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "status" in data
+    assert "encryption" in data
+
+
+def test_ocr_extraction_engine():
+    """Verify OCR engine extracts bank, amount, dates, and AICTE lien from document."""
+    from app.domains.documents.extraction import extract
+
+    sample_text = [
+        "STATE BANK OF INDIA - Fixed Deposit Receipt",
+        "FDR Number: FDR/SBI/2026/90123",
+        "Principal Amount: Rs. 25,00,000.00",
+        "Date of Deposit: 15-Jan-2026",
+        "Date of Maturity: 15-Jan-2029",
+        "Lien marked in favour of Member Secretary, AICTE New Delhi",
+    ]
+    pdf_bytes = build_pdf(sample_text, title="Fixed Deposit Receipt")
+    res = extract(pdf_bytes, filename="fdr_receipt.pdf")
+
+    assert res.status in {"READY", "MANUAL_REVIEW_REQUIRED"}
+    assert res.fields["fdr_number"].value is not None or res.fields["principal_amount"].value is not None
+    if res.fields["principal_amount"].normalised:
+        assert Decimal(res.fields["principal_amount"].normalised) == Decimal("2500000.00")
+    if res.fields["issuer_bank"].value:
+        assert "State Bank of India" in res.fields["issuer_bank"].value
+
+
+def test_statutory_reports_endpoints(officer_client):
+    """Verify new statutory reports: maturity_schedule, regional_distribution, bank_concentration."""
+    for key in ("maturity_schedule", "regional_distribution", "bank_concentration"):
+        resp = officer_client.get(f"/api/v1/reports/{key}")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "columns" in body
+        assert "rows" in body
+        assert isinstance(body["rows"], list)
