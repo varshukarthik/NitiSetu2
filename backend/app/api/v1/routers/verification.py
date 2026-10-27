@@ -191,3 +191,86 @@ def run_mock_bank_check(
     sync_findings(db, fdr)
     db.commit()
     return service.to_check_out(check)
+
+
+@router.post("/fdrs/{fdr_id}/forensics-check")
+def run_forensic_integrity_check(
+    fdr_id: str,
+    principal: CurrentPrincipal,
+    db: DbSession,
+    request: Request,
+):
+    """
+    Document Integrity Verification Centre:
+    Inspects document byte integrity, pyHanko CMS digital signatures, Ed25519 QR signatures,
+    and multi-vector duplicate detection (exact binary hash and normalized reference).
+    """
+    principal.require("fdr:read")
+    fdr = load_scoped_fdr(db, principal, fdr_id)
+
+    from app.db.models import FdrDocument
+    from app.domains.documents.forensics import (
+        verify_pdf_digital_signature,
+        detect_and_verify_qr,
+        check_duplicate_radar,
+    )
+    from app.infrastructure import storage as object_store
+
+    doc = db.scalar(
+        select(FdrDocument)
+        .where(FdrDocument.fdr_id == fdr.id, FdrDocument.scan_status == "CLEAN")
+        .order_by(FdrDocument.created_at.desc())
+        .limit(1)
+    )
+
+    if not doc:
+        return {
+            "fdr_id": fdr.id,
+            "has_clean_document": False,
+            "message": "No clean document uploaded for this instrument yet.",
+            "digital_signature": {"status": "ABSENT", "is_valid": False, "message": "No document on record."},
+            "qr_verification": {"qr_detected": False, "is_verified": False, "message": "No document on record."},
+            "duplicate_candidates": check_duplicate_radar(db, fdr),
+        }
+
+    try:
+        pdf_bytes = object_store.read_object(doc.object_key, session=db)
+    except Exception as exc:
+        return {
+            "fdr_id": fdr.id,
+            "has_clean_document": True,
+            "error": f"Failed reading document object: {str(exc)}",
+            "duplicate_candidates": check_duplicate_radar(db, fdr, current_doc_sha256=doc.sha256),
+        }
+
+    sig_res = verify_pdf_digital_signature(pdf_bytes)
+    qr_res = detect_and_verify_qr(pdf_bytes)
+    duplicates = check_duplicate_radar(db, fdr, current_doc_sha256=doc.sha256)
+
+    record_audit(
+        db,
+        aggregate_type="fdr",
+        aggregate_id=fdr.id,
+        action="document.forensic_integrity_checked",
+        actor=principal,
+        new_state={
+            "pdf_signature": sig_res["status"],
+            "qr_verified": qr_res["is_verified"],
+            "duplicates_found": len(duplicates),
+        },
+        reason="Automated Document Integrity Verification Centre scan executed.",
+        request_id=request_id_of(request),
+    )
+    db.commit()
+
+    return {
+        "fdr_id": fdr.id,
+        "document_id": doc.id,
+        "document_name": doc.original_filename,
+        "sha256": doc.sha256,
+        "digital_signature": sig_res,
+        "qr_verification": qr_res,
+        "duplicate_candidates": duplicates,
+        "disclaimer": "Cryptographic signature checks verify structural and mathematical integrity; they are distinct from direct bank ledger confirmation.",
+    }
+

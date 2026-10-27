@@ -110,11 +110,36 @@ def evidence_fields(db: Session, fdr: Fdr) -> list[schemas.ExtractedFieldOut]:
             difference = "MATCH"
         else:
             difference = "DIFFERS"
+        discrepancy_reason = None
+        recommended_action = None
+        if difference == "DIFFERS":
+            if field == "principal_amount":
+                discrepancy_reason = f"Attested deposit amount ({declared}) does not match the numeric value found on the certificate ({extracted_value})."
+                recommended_action = "Request clarification from the institution or request upload of a corrected deposit certificate."
+            elif field == "maturity_date":
+                discrepancy_reason = f"Attested maturity date ({declared}) differs from the date ({extracted_value}) stated on the physical receipt."
+                recommended_action = "Review certificate date fields and request institution correction."
+            elif field == "issue_date":
+                discrepancy_reason = f"Issue date on instrument ({extracted_value}) disagrees with registered date ({declared})."
+                recommended_action = "Confirm valid deposit tenure start date against issuing bank receipt."
+            elif field == "issuer_bank":
+                discrepancy_reason = f"Bank name '{declared}' differs from parsed bank name '{extracted_value}'."
+                recommended_action = "Verify if bank underwent merger or name variation; confirm official IFSC."
+            elif field == "lien_beneficiary":
+                discrepancy_reason = f"Lien clause wording or beneficiary differs between entry ({declared}) and certificate ({extracted_value})."
+                recommended_action = "Ensure lien is explicitly noted in favor of 'AICTE, New Delhi' as mandated."
+            else:
+                discrepancy_reason = f"Attested value '{declared}' does not match extracted document value '{extracted_value}'."
+                recommended_action = "Cross-examine evidence and request correction if necessary."
+        elif difference == "NOT_FOUND":
+            discrepancy_reason = f"Field '{field}' was not detected by optical/text parsing engines in the uploaded PDF."
+            recommended_action = "Manually scrutinize the document PDF using the viewer."
+        elif difference == "MATCH":
+            discrepancy_reason = "Declared value matches parsed document text."
         raw = field_provenance.get("source_text")
         if field == "fdr_number":
-            # The parsed line contains the number in the clear; only the
-            # masked form may leave the server.
             raw = "[masked]" if raw else None
+
         output.append(
             schemas.ExtractedFieldOut(
                 field=field,
@@ -125,6 +150,8 @@ def evidence_fields(db: Session, fdr: Fdr) -> list[schemas.ExtractedFieldOut]:
                 page_index=field_provenance.get("page_index"),
                 bbox=field_provenance.get("bbox"),
                 difference=difference,
+                discrepancy_reason=discrepancy_reason,
+                recommended_action=recommended_action,
             )
         )
     return output

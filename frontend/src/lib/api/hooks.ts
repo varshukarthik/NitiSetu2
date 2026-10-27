@@ -113,6 +113,15 @@ export function useRuleCatalog() {
   });
 }
 
+export function useSmartActionQueue() {
+  return useQuery({
+    queryKey: ["smart-action-queue"],
+    queryFn: () => apiFetch<any[]>("/smart-action-queue"),
+    staleTime: 60 * 1000,
+  });
+}
+
+
 export function useScenarios(enabled: boolean) {
   return useQuery({
     queryKey: keys.scenarios,

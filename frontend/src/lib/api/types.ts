@@ -77,7 +77,10 @@ export interface EvidenceField {
   page_index: number | null;
   bbox: number[] | null;
   difference: FieldDifference;
+  discrepancy_reason?: string | null;
+  recommended_action?: string | null;
 }
+
 
 export interface DocumentSummary {
   id: string;

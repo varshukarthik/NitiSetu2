@@ -1,29 +1,32 @@
 @import "tailwindcss";
 
-/* Design tokens from the frontend specification, section 5.2. Contrast was
-   checked for text on its own surface; re-verify any new pairing. */
+/* NIDHISETU fintech design tokens:
+   Deep navy: #10233F, Royal blue: #2855D9, Teal accent: #0D9488, Warm off-white: #F7F8FC */
 @theme {
-  --color-canvas: #f6f8fb;
+  --color-canvas: #f7f8fc;
   --color-surface: #ffffff;
-  --color-subtle: #f0f3f8;
-  --color-sidebar: #0f172a;
-  --color-sidebar-active: #233454;
-  --color-ink: #101828;
-  --color-ink-muted: #475467;
-  --color-brand: #2455c5;
-  --color-brand-dark: #1d47a6;
-  --color-success: #067647;
-  --color-success-soft: #ecfdf3;
-  --color-warning: #b54708;
-  --color-warning-soft: #fffaeb;
-  --color-danger: #b42318;
-  --color-danger-soft: #fef3f2;
-  --color-line: #d8dee8;
+  --color-subtle: #f1f4f9;
+  --color-sidebar: #10233f;
+  --color-sidebar-active: #1e3a66;
+  --color-ink: #0f172a;
+  --color-ink-muted: #475569;
+  --color-brand: #2855d9;
+  --color-brand-dark: #1e40af;
+  --color-teal: #0d9488;
+  --color-teal-soft: #f0fdfa;
+  --color-success: #059669;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-soft: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-line: #e2e8f0;
   --radius-card: 12px;
-  --shadow-card: 0 1px 3px rgb(16 24 40 / 0.08);
+  --shadow-card: 0 1px 3px rgb(16 35 63 / 0.08);
   --font-sans: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto,
     "Noto Sans Devanagari", sans-serif;
 }
+
 
 @layer base {
   html {

@@ -153,6 +153,8 @@ class ExtractedFieldOut(BaseModel):
     page_index: int | None
     bbox: list[float] | None
     difference: str  # MATCH | DIFFERS | NOT_FOUND | NOT_COMPARABLE
+    discrepancy_reason: str | None = None
+    recommended_action: str | None = None
 
 
 class DocumentOut(BaseModel):
@@ -335,6 +337,26 @@ class ReplacementIn(BaseModel):
 class FindingDispositionIn(BaseModel):
     status: str = Field(pattern="^(ACKNOWLEDGED|RESOLVED|FALSE_POSITIVE|OPEN)$")
     reason: str = Field(min_length=5, max_length=1000)
+
+
+class SmartQueueItemOut(BaseModel):
+    fdr_id: str
+    fdr_number_masked: str
+    institution_id: str
+    institution_name: str
+    aicte_id: str
+    issuer_bank: str
+    principal_amount: str
+    maturity_date: date
+    days_remaining: int
+    urgency_level: str  # CRITICAL | HIGH | MEDIUM | ROUTINE
+    priority_score: int
+    primary_reason: str
+    contributing_factors: list[str]
+    suggested_action: str
+    review_status: str
+    instrument_status: str
+    assigned_officer_id: str | None = None
 
 
 # --- releases -----------------------------------------------------------------

@@ -135,17 +135,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="Portal sections"
         className="hidden min-h-screen flex-col bg-sidebar text-white lg:flex"
       >
-        <div className="flex items-center gap-2.5 border-b border-white/10 px-4 py-4">
-          <ShieldCheck aria-hidden="true" className="size-6 text-white/90" />
+        <div className="flex items-center gap-3 border-b border-white/10 px-4 py-4">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/20 text-teal-300 ring-1 ring-teal-400/40">
+            <ShieldCheck aria-hidden="true" className="size-5 text-teal-400" />
+          </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">KoshSetu</p>
-            <p className="truncate text-[11px] text-white/55">Security deposit &amp; FDR portal</p>
+            <p className="truncate text-base font-bold tracking-tight text-white">NIDHISETU</p>
+            <p className="truncate text-[10px] uppercase tracking-wider text-teal-300/80">Security Deposit Portal</p>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">{navigation}</div>
         <div className="border-t border-white/10 px-4 py-3 text-[11px] text-white/55">
-          <p>SIH26265 prototype</p>
-          <p className="mt-0.5">Synthetic data only</p>
+          <p className="font-medium text-white/70">SIH26265 Prototype</p>
+          <p className="mt-0.5 text-[10px] text-teal-400/70">AICTE Regulation Bureau</p>
         </div>
       </aside>
 
@@ -158,7 +160,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             aria-label="Portal sections"
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <span className="text-sm font-semibold">KoshSetu</span>
+              <span className="text-sm font-bold tracking-tight text-white">NIDHISETU</span>
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
@@ -263,12 +265,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <footer className="border-t border-line px-4 py-4 text-xs text-ink-muted sm:px-6 lg:px-8">
           <p>
-            KoshSetu — prototype for SIH26265 “Streamline of security deposit / FDR portal”.
-            Not an official AICTE website. All records, clearances and bank responses shown are
-            synthetic.
+            <span className="font-semibold text-ink">NIDHISETU</span> — Secure Deposits. Smarter Decisions. Complete Accountability.
+            Prototype for AICTE Regulation Bureau · SIH26265. All records, clearances and bank responses shown are synthetic.
           </p>
         </footer>
       </div>
     </div>
   );
 }
+

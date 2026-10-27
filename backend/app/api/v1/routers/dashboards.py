@@ -323,8 +323,126 @@ def exceptions(
     return results
 
 
+@router.get("/smart-action-queue", response_model=list[schemas.SmartQueueItemOut])
+def smart_action_queue(principal: CurrentPrincipal, db: DbSession):
+    """
+    Smart Action Queue: Transparent, rules-based priority ordering for scrutiny officers.
+    Factors considered:
+    1. Overdue or imminent maturity (within 15/30 days).
+    2. Open blocker/critical findings or discrepancies.
+    3. Missing or unverified documents.
+    4. Duration pending officer review.
+    5. Pending release requests.
+    """
+    principal.require("fdr:read")
+    today = service.today()
+    statement = scoped_fdr_query(principal)
+    fdrs = list(db.scalars(statement))
+
+    queue_items: list[schemas.SmartQueueItemOut] = []
+
+    for fdr in fdrs:
+        institution = db.get(Institution, fdr.institution_id)
+        days = service.days_remaining(fdr, as_of=today)
+        open_findings = list(
+            db.scalars(select(Finding).where(Finding.fdr_id == fdr.id, Finding.status == "OPEN"))
+        )
+
+        score = 0
+        factors = []
+        primary_reason = "Routine monitoring"
+        suggested_action = "Review periodically until maturity window opens."
+
+        # Rule 1: Overdue maturity
+        if days < 0 and fdr.instrument_status in {"REGISTERED", "ACTIVE"}:
+            score += 100
+            factors.append(f"Deposit overdue by {abs(days)} days with unresolved action (+100)")
+            primary_reason = f"Matured {abs(days)} days ago without renewal or release decision"
+            suggested_action = "Escalate immediately and initiate formal notice to institution."
+        elif 0 <= days <= 15 and fdr.instrument_status in {"REGISTERED", "ACTIVE"}:
+            score += 70
+            factors.append(f"Maturity due in {days} days (+70)")
+            primary_reason = f"Matures within 15 days ({days} days remaining)"
+            suggested_action = "Contact institution for renewal or replacement certificate."
+        elif 16 <= days <= 30 and fdr.instrument_status in {"REGISTERED", "ACTIVE"}:
+            score += 40
+            factors.append(f"Maturity within 30-day window ({days} days) (+40)")
+
+        # Rule 2: Open Findings
+        has_blocker = any(f.severity in {"BLOCKER", "CRITICAL"} for f in open_findings)
+        has_high = any(f.severity == "HIGH" for f in open_findings)
+        if has_blocker:
+            score += 80
+            factors.append(f"{len(open_findings)} open findings including Critical/Blocker (+80)")
+            if "Overdue" not in primary_reason:
+                primary_reason = "Critical integrity discrepancy or policy block detected"
+                suggested_action = "Examine discrepancy evidence and issue clarification request."
+        elif has_high:
+            score += 50
+            factors.append(f"{len(open_findings)} open findings including High severity (+50)")
+
+        # Rule 3: Submission awaiting review
+        if fdr.submission_status == "SUBMITTED" and fdr.review_status in {"QUEUED", "IN_REVIEW"}:
+            score += 35
+            factors.append("Submission awaiting officer scrutiny decision (+35)")
+            if score <= 50:
+                primary_reason = "Fresh submission ready for scrutiny"
+                suggested_action = "Complete document verification and record decision."
+
+        # Rule 4: Release request attached
+        has_release = db.scalar(
+            select(ReleaseRequest.id).where(
+                ReleaseRequest.fdr_id == fdr.id,
+                ReleaseRequest.status.notin_(["CLOSED", "REJECTED", "APPROVED"]),
+            )
+        )
+        if has_release:
+            score += 45
+            factors.append("Open release request requires clearance decisions (+45)")
+            if score < 80:
+                primary_reason = "Active release/refund application in progress"
+                suggested_action = "Inspect pending clearances and prepare approval dossier."
+
+        # Determine urgency tier
+        if score >= 100:
+            urgency = "CRITICAL"
+        elif score >= 60:
+            urgency = "HIGH"
+        elif score >= 30:
+            urgency = "MEDIUM"
+        else:
+            urgency = "ROUTINE"
+
+        queue_items.append(
+            schemas.SmartQueueItemOut(
+                fdr_id=fdr.id,
+                fdr_number_masked=fdr.fdr_number_masked,
+                institution_id=fdr.institution_id,
+                institution_name=institution.name if institution else "",
+                aicte_id=institution.aicte_id if institution else "",
+                issuer_bank=fdr.issuer_bank,
+                principal_amount=f"{Decimal(fdr.principal_amount):.2f}",
+                maturity_date=fdr.maturity_date,
+                days_remaining=days,
+                urgency_level=urgency,
+                priority_score=score,
+                primary_reason=primary_reason,
+                contributing_factors=factors,
+                suggested_action=suggested_action,
+                review_status=fdr.review_status,
+                instrument_status=fdr.instrument_status,
+                assigned_officer_id=fdr.assigned_officer_id,
+            )
+        )
+
+    # Sort descending by priority score
+    queue_items.sort(key=lambda x: x.priority_score, reverse=True)
+    return queue_items
+
+
 @router.get("/rules")
 def rule_catalog(principal: CurrentPrincipal):
+
     """The versioned rule table behind every finding and attention level."""
     principal.require("finding:read")
     catalog = load_catalog()

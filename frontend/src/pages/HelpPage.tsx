@@ -61,11 +61,12 @@ export function HelpPage() {
       <div className="space-y-5">
         <Card title="What this prototype is">
           <p className="text-sm text-ink">
-            KoshSetu is a working prototype for problem statement{" "}
+            <strong>NIDHISETU</strong> (<em>Secure Deposits. Smarter Decisions. Complete Accountability.</em>) is a working prototype for problem statement{" "}
             <strong>{meta?.problem_statement_id ?? "SIH26265"}</strong> —{" "}
             {meta?.problem_statement_title ?? "Streamline of security deposit / FDR portal"},
-            issued by {meta?.issuer ?? "AICTE"}.
+            issued by {meta?.issuer ?? "AICTE Regulation Bureau"}.
           </p>
+
           <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-ink-muted">
             <li>
               It demonstrates the full lifecycle: submission, document evidence, scrutiny, maturity

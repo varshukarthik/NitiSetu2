@@ -67,10 +67,39 @@ def audit_integrity(principal: CurrentPrincipal, db: DbSession):
     principal.require("audit:read")
     result = verify_chain(db)
     result["note"] = (
-        "Tamper evidence through digest chaining. Full immutability requires "
+        "Tamper evidence through SHA-256 digest chaining. Full immutability requires "
         "separate write-only roles and WORM storage under an independent principal."
     )
+    result["algorithm"] = "SHA-256 (canonical_event_data + previous_hash)"
     return result
+
+
+@router.post("/audit-events/simulate-tamper")
+def simulate_audit_tamper(principal: CurrentPrincipal, db: DbSession):
+    """Demo feature: Temporarily tamper with the latest audit event to demonstrate hash chain detection."""
+    principal.require("admin:manage")
+    latest = db.scalar(select(AuditEvent).order_by(AuditEvent.occurred_at.desc()).limit(1))
+    if not latest:
+        return {"status": "error", "message": "No audit events found to tamper with."}
+
+    original_digest = latest.integrity_digest
+    latest.integrity_digest = "00000000000000000000000000000000000000000000000000000000tampered"
+    db.commit()
+
+    # Re-verify immediately to report broken chain
+    tampered_result = verify_chain(db)
+
+    # Restore immediately so we do not corrupt persistent demo state permanently
+    latest.integrity_digest = original_digest
+    db.commit()
+
+    return {
+        "status": "tamper_detected_successfully",
+        "tested_event_id": latest.id,
+        "detection_result": tampered_result,
+        "explanation": "Simulated tampering altered the hash signature; verify_chain() immediately flagged divergence.",
+    }
+
 
 
 @router.post("/ops/maturity-scan")

@@ -93,6 +93,18 @@ export function EvidencePanel({
                 )}
               </div>
 
+              {field.discrepancy_reason && (
+                <div className="mt-2.5 rounded bg-surface-muted/60 p-2 text-xs text-ink">
+                  <p className="font-semibold text-ink-heading">Analysis &amp; Reason:</p>
+                  <p className="mt-0.5 text-ink-muted">{field.discrepancy_reason}</p>
+                  {field.recommended_action && (
+                    <p className="mt-1 font-medium text-brand">
+                      Recommended: {field.recommended_action}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {canLocate && (
                 <button
                   type="button"

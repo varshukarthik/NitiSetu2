@@ -69,28 +69,50 @@ export function LoginPage() {
       <div className="flex flex-col justify-between bg-sidebar px-6 py-10 text-white sm:px-10 lg:px-14">
         <div>
           <div className="flex items-center gap-3">
-            <ShieldCheck aria-hidden="true" className="size-8" />
+            <div className="flex size-11 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300 ring-1 ring-teal-400/40">
+              <ShieldCheck aria-hidden="true" className="size-6 text-teal-400" />
+            </div>
             <div>
-              <p className="text-lg font-semibold">KoshSetu</p>
-              <p className="text-sm text-white/65">Security deposit &amp; FDR portal</p>
+              <p className="text-2xl font-bold tracking-tight text-white">NIDHISETU</p>
+              <p className="text-xs uppercase tracking-wider text-teal-300/80">AICTE Security Deposit &amp; FDR Portal</p>
             </div>
           </div>
 
-          <h1 className="mt-10 max-w-xl text-3xl font-semibold leading-tight sm:text-4xl">
-            One auditable record for every institution-wise security deposit and FDR.
+          <div className="mt-4 inline-flex items-center rounded-full bg-teal-400/10 px-3 py-1 text-xs font-semibold text-teal-300 ring-1 ring-teal-400/30">
+            SIH26265 Regulation Bureau
+          </div>
+
+          <h1 className="mt-8 max-w-xl text-3xl font-bold leading-tight sm:text-4xl">
+            Secure Deposits. Smarter Decisions. Complete Accountability.
           </h1>
-          <p className="mt-4 max-w-xl text-white/75">
-            Institutions submit deposit evidence; authorised AICTE officials scrutinise it,
-            monitor maturity, record replacements and process release cases — with the source of
-            every value on screen and a full history behind each decision.
+          <p className="mt-4 max-w-xl text-white/80">
+            Institutional security deposit governance engineered for AICTE. End-to-end instrument lifecycle, explainable document discrepancy scrutiny, and hash-chained audit integrity.
           </p>
 
-          <ul className="mt-8 space-y-2.5 text-sm text-white/75">
-            <li>• Declared values, document extraction and bank-source results stay separate.</li>
-            <li>• Release approval needs its prescribed documents, clearances and two people.</li>
-            <li>• Every action is written to an append-only, digest-chained audit trail.</li>
+          <ul className="mt-8 space-y-3 text-sm text-white/80">
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-teal-400">✓</span>
+              <span>AES-256-GCM authenticated encryption for sensitive documents at rest.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-teal-400">✓</span>
+              <span>Explainable optical discrepancy detection comparing declared entries vs. certificate text.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-teal-400">✓</span>
+              <span>Cryptographic Ed25519 QR envelope and pyHanko CMS digital signature verification.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-teal-400">✓</span>
+              <span>Multi-vector duplicate radar preventing cross-institution instrument re-pledging.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-teal-400">✓</span>
+              <span>Append-only SHA-256 digest-chained audit ledger with real-time divergence verification.</span>
+            </li>
           </ul>
         </div>
+
 
         <div className="mt-10 rounded-lg border border-white/15 bg-white/5 p-4 text-[13px] text-white/70">
           <p className="font-semibold text-white/85">Prototype disclaimer</p>

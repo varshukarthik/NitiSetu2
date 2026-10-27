@@ -62,7 +62,7 @@ def normalise_database_url(url: str) -> str:
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_prefix="KOSHSETU_",
+        env_prefix="NIDHISETU_",
         extra="ignore",
         case_sensitive=False,
     )
@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "insecure-local-development-secret"
     jwt_ttl_minutes: int = 60
     fdr_hmac_key: str = "insecure-local-development-hmac"
+    aes_master_key_hex: str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     mock_bank_enabled: bool = True
 
     storage_backend: str = Field(default="filesystem", pattern="^(filesystem|database)$")
@@ -95,8 +96,22 @@ class Settings(BaseSettings):
         return value.expanduser().resolve()
 
     @model_validator(mode="after")
-    def _resolve_database_url(self) -> "Settings":
-        url = self.database_url or _discover_database_url() or "sqlite:///./data/koshsetu.db"
+    def _resolve_fallbacks(self) -> "Settings":
+        for field, key in [
+            ("environment", "KOSHSETU_ENVIRONMENT"),
+            ("jwt_secret", "KOSHSETU_JWT_SECRET"),
+            ("fdr_hmac_key", "KOSHSETU_FDR_HMAC_KEY"),
+        ]:
+            if os.environ.get(key) and (not os.environ.get(f"NIDHISETU_{field.upper()}")):
+                object.__setattr__(self, field, os.environ[key])
+
+        url = (
+            self.database_url
+            or os.environ.get("NIDHISETU_DATABASE_URL")
+            or os.environ.get("KOSHSETU_DATABASE_URL")
+            or _discover_database_url()
+            or "sqlite:///./data/nidhisetu.db"
+        )
         object.__setattr__(self, "database_url", normalise_database_url(url))
         if self.auto_create_schema is None:
             object.__setattr__(self, "auto_create_schema", self.environment == "local")

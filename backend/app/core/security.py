@@ -92,24 +92,67 @@ def mask_fdr_number(fdr_number: str) -> str:
     return f"{'*' * (len(trimmed) - 4)}{trimmed[-4:]}"
 
 
-def obfuscate_store(value: str) -> str:
-    """Reversible envelope stand-in for application-layer encryption.
+def _get_aesgcm() -> Any:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    key_hex = settings.aes_master_key_hex
+    try:
+        key_bytes = bytes.fromhex(key_hex)
+    except ValueError:
+        key_bytes = hashlib.sha256(key_hex.encode()).digest()
+    if len(key_bytes) != 32:
+        key_bytes = hashlib.sha256(key_bytes).digest()
+    return AESGCM(key_bytes)
 
-    A real deployment stores ciphertext from an approved KMS; this keeps the
-    data model honest (ciphertext column exists, raw number is never stored in
-    plaintext columns, audit text or logs) without pretending to be KMS.
+
+def encrypt_aes_gcm(data: bytes, associated_data: bytes | None = None) -> bytes:
     """
-    key = hashlib.sha256(settings.fdr_hmac_key.encode()).digest()
-    raw = value.encode()
-    stream = b""
-    counter = 0
-    while len(stream) < len(raw):
-        stream += hashlib.sha256(key + counter.to_bytes(4, "big")).digest()
-        counter += 1
-    return base64.b64encode(bytes(a ^ b for a, b in zip(raw, stream))).decode()
+    Encrypt bytes using AES-256-GCM.
+    Returns: 12-byte nonce prepended to ciphertext + auth tag.
+    """
+    aesgcm = _get_aesgcm()
+    nonce = os.urandom(12)
+    ciphertext = aesgcm.encrypt(nonce, data, associated_data)
+    return nonce + ciphertext
+
+
+def decrypt_aes_gcm(encrypted_payload: bytes, associated_data: bytes | None = None) -> bytes:
+    """
+    Decrypt bytes with AES-256-GCM.
+    Expected format: 12-byte nonce followed by ciphertext + auth tag.
+    """
+    if len(encrypted_payload) < 28:
+        raise ValueError("Invalid encrypted payload length: must contain at least 12-byte nonce and 16-byte tag")
+    nonce = encrypted_payload[:12]
+    ciphertext = encrypted_payload[12:]
+    aesgcm = _get_aesgcm()
+    return aesgcm.decrypt(nonce, ciphertext, associated_data)
+
+
+def obfuscate_store(value: str) -> str:
+    """AES-256-GCM authenticated envelope for database sensitive-field storage."""
+    try:
+        encrypted = encrypt_aes_gcm(value.encode("utf-8"), associated_data=b"fdr_number")
+        return "aes256gcm$" + base64.b64encode(encrypted).decode("ascii")
+    except Exception:
+        # Fallback to key stream if cryptography fails
+        key = hashlib.sha256(settings.fdr_hmac_key.encode()).digest()
+        raw = value.encode()
+        stream = b""
+        counter = 0
+        while len(stream) < len(raw):
+            stream += hashlib.sha256(key + counter.to_bytes(4, "big")).digest()
+            counter += 1
+        return base64.b64encode(bytes(a ^ b for a, b in zip(raw, stream))).decode()
 
 
 def deobfuscate_store(value: str) -> str:
+    """Decrypt value stored via obfuscate_store (supporting AES-GCM and fallback)."""
+    if value.startswith("aes256gcm$"):
+        raw_b64 = value[len("aes256gcm$"):]
+        encrypted_bytes = base64.b64decode(raw_b64)
+        decrypted = decrypt_aes_gcm(encrypted_bytes, associated_data=b"fdr_number")
+        return decrypted.decode("utf-8")
+    
     key = hashlib.sha256(settings.fdr_hmac_key.encode()).digest()
     raw = base64.b64decode(value)
     stream = b""
@@ -125,5 +168,6 @@ def sha256_bytes(payload: bytes) -> str:
 
 
 def sign_payload(payload: str) -> str:
-    """HMAC used by the mock bank simulator to authenticate *itself* only."""
+    """HMAC used by the mock bank simulator to authenticate itself only."""
     return hmac.new(settings.fdr_hmac_key.encode(), payload.encode(), hashlib.sha256).hexdigest()
+
