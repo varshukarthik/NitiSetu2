@@ -1,7 +1,4 @@
-// Charts always ship with their numbers.
-//
-// Each chart is followed by an accessible table of the same values, because
-// colour and bar length alone cannot carry maturity or backlog meaning.
+// Charts configured with modern aesthetics matching the portal design.
 
 import {
   Bar,
@@ -32,88 +29,117 @@ export function MaturityChart({
     count: bucket.count,
   }));
 
-  const peak = data.reduce(
-    (best, row) => (row.amount > (best?.amount ?? -1) ? row : best),
-    data[0],
-  );
-
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-ink-muted">
-          {peak
-            ? `Largest month by value: ${peak.label} (${money(peak.amount)} across ${peak.count} instrument${peak.count === 1 ? "" : "s"}).`
-            : "No maturities in scope."}
-        </p>
-        <div role="group" aria-label="Chart measure" className="flex gap-1">
-          {(["amount", "count"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={mode === option}
-              onClick={() => setMode(option)}
-              className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${
-                mode === option
-                  ? "border-brand bg-brand text-white"
-                  : "border-line bg-surface text-ink-muted"
-              }`}
-            >
-              {option === "amount" ? "By value" : "By count"}
-            </button>
-          ))}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div />
+        <div role="group" aria-label="Chart measure" className="flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-pressed={mode === "amount"}
+            onClick={() => setMode("amount")}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+              mode === "amount"
+                ? "bg-[#2563eb] text-white shadow-sm"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            By value
+          </button>
+          <button
+            type="button"
+            aria-pressed={mode === "count"}
+            onClick={() => setMode("count")}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+              mode === "count"
+                ? "bg-[#2563eb] text-white shadow-sm"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            By count
+          </button>
         </div>
       </div>
 
-      <div className="h-60" aria-hidden="true">
+      <div className="h-64 w-full" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
-            <CartesianGrid stroke="#e6eaf2" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#475467" }} interval={0} angle={-20} dy={10} height={46} />
+          <BarChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+            <defs>
+              <linearGradient id="barBlueGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#2563eb" />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#f1f5f9" vertical={false} strokeDasharray="3 3" />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 11, fill: "#64748b" }}
+              axisLine={{ stroke: "#e2e8f0" }}
+              tickLine={false}
+              dy={6}
+            />
             <YAxis
-              tick={{ fontSize: 11, fill: "#475467" }}
-              tickFormatter={(value: number) => (mode === "amount" ? moneyCompact(value) : String(value))}
-              width={70}
+              tick={{ fontSize: 11, fill: "#64748b" }}
+              tickFormatter={(value: number) =>
+                mode === "amount" ? moneyCompact(value) : String(value)
+              }
+              axisLine={false}
+              tickLine={false}
+              width={65}
             />
             <Tooltip
-              formatter={(value: number) => (mode === "amount" ? money(value) : `${value} instruments`)}
-              contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #d8dee8" }}
+              cursor={{ fill: "rgba(241, 245, 249, 0.6)" }}
+              content={({ active, payload }) => {
+                if (!active || !payload || !payload.length) return null;
+                const row = payload[0].payload as { label: string; amount: number; count: number };
+                return (
+                  <div className="rounded-xl bg-[#101828] text-white px-3.5 py-2.5 shadow-2xl border border-slate-700/60 min-w-40">
+                    <p className="text-[11px] font-medium text-slate-400">{row.label}</p>
+                    <div className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white">
+                      <span className="size-2 rounded-sm bg-blue-500 inline-block" />
+                      <span>{money(row.amount)}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {row.count} instrument{row.count === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                );
+              }}
             />
             <Bar
               dataKey={mode}
-              radius={[4, 4, 0, 0]}
+              radius={[6, 6, 0, 0]}
+              maxBarSize={48}
               onClick={(entry: { label?: string }) => entry.label && onSelectMonth?.(entry.label)}
             >
               {data.map((row) => (
-                <Cell key={row.label} fill="#2455c5" cursor={onSelectMonth ? "pointer" : "default"} />
+                <Cell
+                  key={row.label}
+                  fill="url(#barBlueGradient)"
+                  cursor={onSelectMonth ? "pointer" : "default"}
+                />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <details className="mt-3 text-sm">
-        <summary className="cursor-pointer font-medium text-brand-dark">
-          View the same data as a table
+      <details className="mt-3 text-xs text-slate-500">
+        <summary className="cursor-pointer font-medium text-blue-600 hover:text-blue-700">
+          View as accessible data table
         </summary>
-        <table className="mt-2 w-full text-sm">
-          <caption className="sr-only">Maturities by month, with value and instrument count</caption>
+        <table className="mt-2 w-full text-xs text-slate-600">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-muted">
-              <th scope="col" className="py-1.5">
-                Month
-              </th>
-              <th scope="col" className="py-1.5 text-right">
-                Instruments
-              </th>
-              <th scope="col" className="py-1.5 text-right">
-                Value
-              </th>
+            <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wide text-slate-400">
+              <th scope="col" className="py-1.5">Month</th>
+              <th scope="col" className="py-1.5 text-right">Instruments</th>
+              <th scope="col" className="py-1.5 text-right">Value</th>
             </tr>
           </thead>
           <tbody>
             {data.map((row) => (
-              <tr key={row.label} className="border-b border-line/60 last:border-0">
-                <td className="py-1.5">{row.label}</td>
+              <tr key={row.label} className="border-b border-slate-100 last:border-0">
+                <td className="py-1.5 font-medium">{row.label}</td>
                 <td className="tabular py-1.5 text-right">{row.count}</td>
                 <td className="tabular py-1.5 text-right">{money(row.amount)}</td>
               </tr>
@@ -126,26 +152,30 @@ export function MaturityChart({
 }
 
 export function BacklogBars({ buckets }: { buckets: Bucket[] }) {
-  const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
+  // We determine max count for scale, but ensure non-zero representation
+  const max = Math.max(3, ...buckets.map((bucket) => bucket.count));
+
   return (
-    <ul className="space-y-2.5">
-      {buckets.map((bucket) => (
-        <li key={bucket.label}>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-ink">{bucket.label}</span>
-            <span className="tabular font-semibold text-ink">{bucket.count}</span>
+    <div className="space-y-4 pt-1">
+      {buckets.map((bucket) => {
+        const count = bucket.count;
+        const widthPercent = count > 0 ? Math.max(12, Math.round((count / max) * 100)) : 0;
+
+        return (
+          <div key={bucket.label} className="flex items-center gap-4 text-xs">
+            <span className="w-20 font-medium text-slate-700 shrink-0">{bucket.label}</span>
+            <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden flex items-center">
+              {widthPercent > 0 && (
+                <div
+                  className="h-full bg-[#2563eb] rounded-full transition-all duration-500"
+                  style={{ width: `${widthPercent}%` }}
+                />
+              )}
+            </div>
+            <span className="w-5 text-right font-bold text-slate-900 tabular">{count}</span>
           </div>
-          <div className="mt-1 h-2 rounded-full bg-subtle">
-            <div
-              aria-hidden="true"
-              className={`h-2 rounded-full ${
-                bucket.label.startsWith("30+") ? "bg-danger" : bucket.label.startsWith("8-") ? "bg-warning" : "bg-brand"
-              }`}
-              style={{ width: `${Math.round((bucket.count / max) * 100)}%` }}
-            />
-          </div>
-        </li>
-      ))}
-    </ul>
+        );
+      })}
+    </div>
   );
 }
