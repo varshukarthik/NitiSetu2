@@ -206,14 +206,18 @@ export function LoginPage() {
         <div className="bg-white rounded-[26px] border border-slate-200/90 shadow-2xl shadow-blue-950/8 p-6 sm:p-9 transition-all">
           {/* Card Top: Dual Logos (NIDHISETU + AICTE) */}
           <div className="flex items-center justify-between pb-6 border-b border-slate-100 gap-4">
-            {/* Left: NIDHISETU Brand */}
+            {/* Left: NidhiSetu Brand */}
             <div className="flex items-center gap-3">
-              <div className="size-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-500 shadow-md shadow-blue-500/20 flex items-center justify-center text-white shrink-0">
-                <ShieldCheck className="size-6 text-white" />
+              <div className="size-11 rounded-2xl bg-slate-900/5 border border-slate-200 p-1 flex items-center justify-center shrink-0 shadow-xs">
+                <img
+                  src="/assets/nidhisetu-logo.png"
+                  alt="NidhiSetu Shield Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <p className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
-                  NIDHISETU
+                  NidhiSetu
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1">
                   AICTE Security Deposit Portal

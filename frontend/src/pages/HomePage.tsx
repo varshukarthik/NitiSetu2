@@ -149,12 +149,16 @@ export function HomePage() {
           {/* Left Brand with Dual Emblem */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2.5">
-              <div className="size-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-500 shadow-md shadow-blue-500/20 flex items-center justify-center text-white shrink-0">
-                <ShieldCheck className="size-5.5 text-white" />
+              <div className="size-10 rounded-2xl bg-slate-900/5 border border-slate-200 p-1 flex items-center justify-center shrink-0 shadow-xs">
+                <img
+                  src="/assets/nidhisetu-logo.png"
+                  alt="NidhiSetu Shield Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <p className="text-xl font-extrabold tracking-tight text-slate-900 leading-none">
-                  NIDHISETU
+                  NidhiSetu
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
                   AICTE Security Deposit Portal
@@ -502,11 +506,15 @@ export function HomePage() {
       <footer className="relative z-10 border-t border-slate-200 bg-white py-8 px-4 sm:px-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="size-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
-              <ShieldCheck className="size-4 text-white" />
+            <div className="size-8 rounded-xl bg-slate-900/5 border border-slate-200 p-0.5 flex items-center justify-center shrink-0">
+              <img
+                src="/assets/nidhisetu-logo.png"
+                alt="NidhiSetu Shield Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
-              <p className="font-bold text-slate-900">NIDHISETU (KoshSetu)</p>
+              <p className="font-bold text-slate-900">NidhiSetu</p>
               <p className="text-[10px] text-slate-400">All India Council for Technical Education &bull; SIH26265</p>
             </div>
           </div>

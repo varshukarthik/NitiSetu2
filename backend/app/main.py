@@ -1,4 +1,4 @@
-"""KoshSetu — AICTE security deposit / FDR portal API (SIH26265 prototype).
+"""NidhiSetu — AICTE security deposit / FDR portal API (SIH26265 prototype).
 
 Prototype scope: all data is synthetic and bank verification is simulated. No
 response from this service establishes the real-world authenticity of any
@@ -72,7 +72,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    title="KoshSetu — AICTE FDR Portal API",
+    title="NidhiSetu — AICTE FDR Portal API",
     version="1.0.0",
     description=(
         "Prototype API for SIH26265 (Streamline of security deposit / FDR portal). "

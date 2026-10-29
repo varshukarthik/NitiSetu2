@@ -9,7 +9,6 @@ import {
   LogOut,
   Menu,
   Search,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -96,11 +95,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         {/* Brand Header */}
         <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30">
-            <ShieldCheck aria-hidden="true" className="size-5" />
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl overflow-hidden bg-slate-900/60 p-1 border border-white/10 shadow-md">
+            <img
+              src="/assets/nidhisetu-logo.png"
+              alt="NidhiSetu Shield Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-base font-bold tracking-tight text-white font-sans">KoshSetu</p>
+            <p className="truncate text-base font-bold tracking-tight text-white font-sans">NidhiSetu</p>
             <p className="truncate text-[10px] text-slate-400">Security deposit &amp; FDR portal</p>
           </div>
         </div>
@@ -150,8 +153,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <ShieldCheck className="size-5 text-blue-400" />
-                <span className="text-sm font-bold tracking-tight text-white">KoshSetu</span>
+                <img
+                  src="/assets/nidhisetu-logo.png"
+                  alt="NidhiSetu Shield Logo"
+                  className="size-6 object-contain"
+                />
+                <span className="text-sm font-bold tracking-tight text-white">NidhiSetu</span>
               </div>
               <button
                 type="button"
