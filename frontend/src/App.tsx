@@ -10,6 +10,7 @@ import { AppShell } from "./components/app-shell/AppShell";
 import { Alert, LoadingBlock } from "./components/ui/primitives";
 import { useSession } from "./lib/auth/session";
 import { HelpPage } from "./pages/HelpPage";
+import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { AdminOverviewPage } from "./pages/admin/AdminOverviewPage";
@@ -95,8 +96,9 @@ function HomeRedirect() {
 export function App() {
   return (
     <Routes>
+      <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<HomeRedirect />} />
+      <Route path="/workspace" element={<HomeRedirect />} />
 
       <Route
         path="/institution/overview"

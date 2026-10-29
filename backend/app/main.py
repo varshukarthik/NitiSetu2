@@ -49,6 +49,18 @@ async def lifespan(_: FastAPI):
     # the guarded bootstrap route once, so a cold start does no DDL.
     if settings.auto_create_schema:
         Base.metadata.create_all(bind=engine)
+        try:
+            from sqlalchemy import func, select
+            from app.db.models import User
+            from app.db.session import SessionFactory
+            from app.seed import seed
+
+            with SessionFactory() as db:
+                if (db.scalar(select(func.count(User.id))) or 0) == 0:
+                    logger.info("Empty database detected; seeding initial demo dataset...")
+                    seed(reset=False, include_derived=False)
+        except Exception as exc:
+            logger.warning("Could not auto-seed database: %s", exc)
     logger.info(
         "startup environment=%s mock_bank=%s storage=%s",
         settings.environment,

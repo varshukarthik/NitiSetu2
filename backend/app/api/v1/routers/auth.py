@@ -10,7 +10,7 @@ from __future__ import annotations
 import secrets
 
 from fastapi import APIRouter, Request, Response, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.api import schemas
 from app.api.deps import (
@@ -57,6 +57,12 @@ def _session_out(principal: Principal, csrf_token: str | None = None) -> schemas
 @router.post("/auth/login", response_model=schemas.SessionOut)
 def login(payload: schemas.LoginIn, request: Request, response: Response, db: DbSession):
     user = db.scalar(select(User).where(User.email == str(payload.email).lower()))
+    if user is None:
+        user_count = db.scalar(select(func.count(User.id))) or 0
+        if user_count == 0:
+            from app.seed import seed
+            seed(reset=False, include_derived=False)
+            user = db.scalar(select(User).where(User.email == str(payload.email).lower()))
     authenticated = user is not None and verify_password(payload.password, user.password_hash)
 
     if not authenticated or user is None or not user.active:
