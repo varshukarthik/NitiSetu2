@@ -111,12 +111,13 @@ export function LoginPage() {
   if (session) {
     const from = (location.state as { from?: string } | null)?.from;
     const dest =
-      from ??
-      (session.workspace === "institution"
-        ? "/institution/overview"
-        : session.workspace === "admin"
-          ? "/admin/overview"
-          : "/official/overview");
+      from && from !== "/login"
+        ? from
+        : session.workspace === "institution"
+          ? "/institution/overview"
+          : session.workspace === "admin"
+            ? "/admin/overview"
+            : "/official/overview";
     return <Navigate to={dest} replace />;
   }
 
@@ -143,6 +144,7 @@ export function LoginPage() {
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (submitting || oneClickEmail !== null) return;
     setSubmitting(true);
     try {
       await handleAuthenticate(email, password);
@@ -152,6 +154,7 @@ export function LoginPage() {
   }
 
   async function onOneClick(role: OneClickRole) {
+    if (submitting || oneClickEmail !== null) return;
     setOneClickEmail(role.email);
     setEmail(role.email);
     setPassword(DEMO_PASSWORD);

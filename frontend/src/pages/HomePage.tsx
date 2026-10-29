@@ -104,10 +104,11 @@ export function HomePage() {
   const [loggingInEmail, setLoggingInEmail] = useState<string | null>(null);
 
   async function handleQuickLaunch(email: string, targetPath: string) {
+    if (loggingInEmail !== null) return;
     setLoggingInEmail(email);
     try {
       await signIn(email, "Demo@12345");
-      navigate(targetPath);
+      navigate(targetPath, { replace: true });
     } catch {
       navigate("/login", { state: { prefillEmail: email } });
     } finally {

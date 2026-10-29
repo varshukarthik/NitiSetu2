@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     environment: str = Field(default="local", pattern="^(local|demo|production)$")
     database_url: str = ""
     jwt_secret: str = "insecure-local-development-secret"
-    jwt_ttl_minutes: int = 60
+    jwt_ttl_minutes: int = 1440
     fdr_hmac_key: str = "insecure-local-development-hmac"
     aes_master_key_hex: str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     mock_bank_enabled: bool = True
@@ -196,9 +196,9 @@ def get_settings() -> Settings:
         # Auto-heal missing settings so the demo service runs without crashing on invocation
         if cfg.is_serverless:
             if "insecure-local" in cfg.jwt_secret:
-                object.__setattr__(cfg, "jwt_secret", "nidhisetu-vault-session-key-" + str(abs(hash(os.environ.get("VERCEL_DEPLOYMENT_ID", "default")))))
+                object.__setattr__(cfg, "jwt_secret", "nidhisetu-vault-jwt-session-secret-key-stable-2026")
             if "insecure-local" in cfg.fdr_hmac_key:
-                object.__setattr__(cfg, "fdr_hmac_key", "nidhisetu-vault-hmac-key-" + str(abs(hash(os.environ.get("VERCEL_DEPLOYMENT_ID", "default")))))
+                object.__setattr__(cfg, "fdr_hmac_key", "nidhisetu-vault-hmac-integrity-key-stable-2026")
             if cfg.storage_backend == "filesystem":
                 object.__setattr__(cfg, "storage_backend", "database")
             if cfg.is_sqlite:
