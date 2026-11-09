@@ -1,5 +1,6 @@
-// Main Landing Page styled with the authoritative AICTE government fintech aesthetic.
-// Matching the light palette, architectural backdrop, dual branding, and 1-click role logins.
+// Landing Page: Unslopped statutory design.
+// Calm, authoritative layout, asymmetric hero with authentic product preview,
+// uniform persona access cards, and clean statutory architecture.
 
 import {
   ArrowRight,
@@ -13,12 +14,8 @@ import {
   LogOut,
   RefreshCw,
   Settings,
-  Shield,
   ShieldCheck,
-  Sparkles,
   User,
-  Users,
-  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -32,68 +29,48 @@ interface QuickRole {
   institutionOrBureau: string;
   description: string;
   icon: typeof User;
-  iconBg: string;
-  iconColor: string;
-  cardBg: string;
-  badgeTone: string;
   workspacePath: string;
 }
 
 const QUICK_ROLES: QuickRole[] = [
   {
-    title: "AICTE Scrutiny Officer",
-    roleTag: "Official Scrutiny",
+    title: "Scrutiny Officer",
+    roleTag: "Official Review",
     email: "scrutiny@aicte.demo",
     institutionOrBureau: "South & West Regional Bureaus",
     description:
-      "Review FDR submissions, inspect optical discrepancy heatmaps, and evaluate simulated bank verification responses.",
+      "Review submitted FDR certificates, evaluate optical extraction discrepancies, and verify declared banking parameters.",
     icon: User,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    cardBg: "bg-blue-50/40 hover:bg-white",
-    badgeTone: "bg-blue-100 text-blue-800 border-blue-200",
     workspacePath: "/official/overview",
   },
   {
     title: "Competent Authority",
-    roleTag: "Release Approver",
+    roleTag: "Statutory Approver",
     email: "supervisor@aicte.demo",
-    institutionOrBureau: "AICTE Regulation Bureau",
+    institutionOrBureau: "Regulation Bureau",
     description:
-      "Inspect multi-bureau clearances (Finance, PGRC, Vigilance) and digitally authorize tripartite FDR discharges.",
+      "Inspect multi-bureau clearances from Finance, PGRC, and Vigilance to digitally authorize tripartite FDR discharges.",
     icon: Building,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    cardBg: "bg-emerald-50/40 hover:bg-white",
-    badgeTone: "bg-emerald-100 text-emerald-800 border-emerald-200",
     workspacePath: "/official/overview",
   },
   {
     title: "Institution Submitter",
-    roleTag: "Coastal Institute",
+    roleTag: "Technical College",
     email: "submitter@coastal.demo",
-    institutionOrBureau: "AICTE Permanent ID: 1-102938475",
+    institutionOrBureau: "Coastal Institute of Technology",
     description:
-      "Submit fresh security deposits, upload bank FDR certificates, track scrutiny progress, and request releases.",
+      "Submit fresh security deposits, upload digitized bank FDR certificates, track scrutiny progress, and file renewals.",
     icon: GraduationCap,
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
-    cardBg: "bg-purple-50/40 hover:bg-white",
-    badgeTone: "bg-purple-100 text-purple-800 border-purple-200",
     workspacePath: "/institution/overview",
   },
   {
     title: "Security Administrator",
-    roleTag: "Cryptographic Custodian",
+    roleTag: "Audit Custodian",
     email: "admin@aicte.demo",
-    institutionOrBureau: "Audit & Risk Governance",
+    institutionOrBureau: "Risk & Ledger Governance",
     description:
-      "Verify SHA-256 append-only ledger integrity, inspect rule version manifests, and manage system telemetry.",
+      "Inspect continuous SHA-256 hash chaining, verify rule catalog versions, and examine system audit telemetry.",
     icon: Settings,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
-    cardBg: "bg-amber-50/40 hover:bg-white",
-    badgeTone: "bg-amber-100 text-amber-800 border-amber-200",
     workspacePath: "/admin/overview",
   },
 ];
@@ -124,32 +101,14 @@ export function HomePage() {
         : "/official/overview";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8fafc] via-[#edf2f9] to-[#e4ecf7] text-slate-800 selection:bg-blue-600 selection:text-white relative overflow-x-hidden">
-      {/* Background Architectural Illustrations */}
-      <img
-        src="/assets/aicte-building-left.png"
-        alt="AICTE Bhavan Artwork Left"
-        className="absolute top-48 -left-10 w-80 sm:w-96 lg:w-[480px] pointer-events-none opacity-25 mix-blend-multiply select-none"
-        onError={(e) => {
-          e.currentTarget.style.display = "none";
-        }}
-      />
-      <img
-        src="/assets/aicte-building-right.png"
-        alt="AICTE Bhavan Artwork Right"
-        className="absolute top-48 -right-10 w-80 sm:w-96 lg:w-[480px] pointer-events-none opacity-25 mix-blend-multiply select-none"
-        onError={(e) => {
-          e.currentTarget.style.display = "none";
-        }}
-      />
-
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 selection:bg-slate-800 selection:text-white">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 shadow-xs">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xs border-b border-slate-200 px-4 sm:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Left Brand with Dual Emblem */}
+          {/* Brand */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="size-10 rounded-2xl bg-slate-900/5 border border-slate-200 p-1 flex items-center justify-center shrink-0 shadow-xs">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="size-8 rounded-lg bg-slate-50 border border-slate-200 p-0.5 flex items-center justify-center shrink-0">
                 <img
                   src="/assets/nidhisetu-logo.png"
                   alt="NidhiSetu Shield Logo"
@@ -157,22 +116,22 @@ export function HomePage() {
                 />
               </div>
               <div>
-                <p className="text-xl font-extrabold tracking-tight text-slate-900 leading-none">
+                <p className="text-base font-semibold tracking-tight text-slate-900 leading-none">
                   NidhiSetu
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
+                <p className="text-[10px] text-slate-400 mt-0.5">
                   AICTE Security Deposit Portal
                 </p>
               </div>
-            </div>
+            </Link>
 
-            <div className="hidden sm:block h-6 w-px bg-slate-200" />
+            <div className="hidden sm:block h-5 w-px bg-slate-200" />
 
             <div className="hidden sm:flex items-center">
               <img
                 src="/assets/aicte-logo-full.png"
                 alt="AICTE Official Emblem"
-                className="h-9 object-contain"
+                className="h-8 object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
@@ -180,155 +139,203 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Center Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600">
-            <a href="#features" className="hover:text-blue-600 transition-colors">
-              Core Architecture
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600">
+            <a href="#features" className="hover:text-slate-900 transition-colors">
+              Core architecture
             </a>
-            <a href="#quick-roles" className="hover:text-blue-600 transition-colors">
-              Roles &amp; Access
+            <a href="#quick-roles" className="hover:text-slate-900 transition-colors">
+              Stakeholder roles
             </a>
-            <a href="#forensics" className="hover:text-blue-600 transition-colors">
-              Discrepancy Radar
+            <a href="#clearances" className="hover:text-slate-900 transition-colors">
+              Tripartite matrix
             </a>
-            <a href="#security" className="hover:text-blue-600 transition-colors">
-              Audit Ledger
+            <a href="#ledger" className="hover:text-slate-900 transition-colors">
+              Audit trail
             </a>
           </nav>
 
-          {/* Right Action */}
+          {/* Actions */}
           <div className="flex items-center gap-3">
-            <div className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[11px] font-semibold">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>SIH26265 Environment Active</span>
-            </div>
+            <span className="hidden lg:inline-flex items-center rounded border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[11px] text-slate-500">
+              SIH26265 Active
+            </span>
 
             {session ? (
               <div className="flex items-center gap-2">
                 <Link
                   to={workspaceUrl}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors"
                 >
-                  <span>My Workspace ({session.display_name.split(" ")[0]})</span>
-                  <ArrowRight className="size-3.5" />
+                  <span>Open workspace ({session.display_name.split(" ")[0]})</span>
+                  <ArrowRight className="size-3" />
                 </Link>
                 <button
                   type="button"
                   onClick={() => signOut()}
                   title="Sign out"
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  <LogOut className="size-4" />
+                  <LogOut className="size-3.5" />
                 </button>
               </div>
             ) : (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors"
               >
-                <span>Login / Sign In</span>
-                <ArrowRight className="size-3.5" />
+                <span>Sign in</span>
+                <ArrowRight className="size-3" />
               </Link>
             )}
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative z-10 pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-8 max-w-7xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold mb-6 shadow-xs">
-          <Sparkles className="size-3.5 text-blue-600" />
-          <span>Statutory Security Deposit &amp; FDR Management Infrastructure</span>
-        </div>
-
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-[1.18] text-slate-900">
-          Secure Deposits. Smarter Decisions.{" "}
-          <span className="text-[#2563EB]">Complete Accountability.</span>
-        </h1>
-
-        <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          AICTE institutional security deposit governance engineered for regulatory rigor. Real-time multi-layer OCR discrepancy scrutiny, pyHanko CMS digital signatures, multi-vector duplicate radar, and append-only SHA-256 hash-chained audit integrity.
-        </p>
-
-        {/* Hero CTAs */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/25 transition-all"
-          >
-            <span>Access Portal</span>
-            <ArrowRight className="size-4" />
-          </Link>
-
-          <a
-            href="#quick-roles"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm shadow-xs transition-all"
-          >
-            <Users className="size-4 text-blue-600" />
-            <span>1-Click Role Logins</span>
-          </a>
-
-          <Link
-            to="/help"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors text-xs font-semibold"
-          >
-            <FileCode className="size-4 text-slate-400" />
-            <span>Statutory Regulations &amp; Guide</span>
-          </Link>
-        </div>
-
-        {/* Live System Stat Cards (Matching Overview KPI Style) */}
-        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 text-left">
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Active Deposits Tracked</p>
-            <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tabular leading-none">₹95.40+ Cr</p>
-            <p className="mt-2 text-xs text-blue-600 font-semibold flex items-center gap-1">
-              <CheckCircle2 className="size-3.5 text-blue-500" /> 100% Encrypted at Rest
+      {/* Hero Section: Asymmetric Split with Authentic Product Preview */}
+      <section className="pt-12 pb-16 sm:pt-16 sm:pb-20 px-4 sm:px-8 max-w-7xl mx-auto border-b border-slate-200/80">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+          {/* Left Hero Content */}
+          <div className="text-left max-w-2xl">
+            <p className="text-xs font-medium text-slate-500 mb-2">
+              All India Council for Technical Education &bull; Regulation Bureau
             </p>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900 leading-[1.12]">
+              Institutional security deposit management for technical education
+            </h1>
+
+            <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed">
+              Statutory deposit lifecycle governance for AICTE. Real-time OCR discrepancy scrutiny, tripartite release clearances across Finance, PGRC, and Vigilance, backed by append-only SHA-256 audit chaining.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors"
+              >
+                <span>Access portal</span>
+                <ArrowRight className="size-3.5" />
+              </Link>
+
+              <Link
+                to="/help"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs transition-colors"
+              >
+                <FileCode className="size-3.5 text-slate-400" />
+                <span>Statutory guidelines</span>
+              </Link>
+            </div>
+
+            {/* Micro guarantees */}
+            <div className="mt-8 pt-6 border-t border-slate-200 flex flex-wrap gap-y-2 gap-x-6 text-xs text-slate-500 font-normal">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="size-3.5 text-slate-600" />
+                <span>Client-side AES-256-GCM vault</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="size-3.5 text-slate-600" />
+                <span>pyHanko CMS digital signatures</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="size-3.5 text-slate-600" />
+                <span>Continuous hash ledger</span>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Registered Bodies</p>
-            <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tabular leading-none">4 Key Entities</p>
-            <p className="mt-2 text-xs text-emerald-600 font-semibold flex items-center gap-1">
-              <Building className="size-3.5" /> Coastal, Highland, Apex, Metro
-            </p>
-          </div>
+          {/* Right Hero: Authentic Live Product Preview */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-emerald-600" />
+                <span className="font-medium text-slate-800">Instrument record in register</span>
+              </div>
+              <span className="font-mono text-[11px] text-slate-400">STATE: ACTIVE</span>
+            </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Audit Ledger Hash</p>
-            <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 leading-none">SHA-256</p>
-            <p className="mt-2 text-xs text-purple-600 font-semibold flex items-center gap-1">
-              <Fingerprint className="size-3.5 text-purple-500" /> Append-Only Immutable
-            </p>
-          </div>
+            <div className="mt-4 space-y-3 text-xs">
+              <div className="flex items-baseline justify-between">
+                <span className="text-slate-500">Declared FDR amount</span>
+                <span className="text-xl font-semibold text-slate-900 tabular-nums">₹1,75,00,000.00</span>
+              </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Optical Scrutiny Engine</p>
-            <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 leading-none">3-Way OCR</p>
-            <p className="mt-2 text-xs text-amber-600 font-semibold flex items-center gap-1">
-              <ShieldCheck className="size-3.5 text-amber-500" /> Tesseract + PyMuPDF + RegEx
-            </p>
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-[11px]">
+                <div>
+                  <p className="text-slate-400">Institution</p>
+                  <p className="font-medium text-slate-800 mt-0.5 truncate">Coastal Institute (1-102938475)</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Bank &amp; Branch</p>
+                  <p className="font-medium text-slate-800 mt-0.5 truncate">Axis Bank &bull; Powai</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Lien Beneficiary</p>
+                  <p className="font-medium text-slate-800 mt-0.5 truncate">AICTE, New Delhi</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Maturity Window</p>
+                  <p className="font-medium text-slate-800 mt-0.5 tabular-nums">Oct 2027 (345 days)</p>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 rounded bg-slate-50 p-2.5 font-mono text-[10px] text-slate-600 space-y-1">
+                <div className="flex justify-between">
+                  <span>OCR_VERIFICATION</span>
+                  <span className="text-emerald-700 font-semibold">MATCH_100%</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>CHAIN_DIGEST</span>
+                  <span className="truncate max-w-[200px]">sha256:7f8a9e01bc...48a2</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 1-Click Role Login Showcase (Matching Login Page Style) */}
-      <section id="quick-roles" className="relative z-10 py-14 px-4 sm:px-8 max-w-7xl mx-auto border-t border-slate-200/80">
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold mb-3">
-            <Zap className="size-3.5 text-blue-600" />
-            <span>Interactive Demonstration Environment</span>
+      {/* Register Headline Numbers */}
+      <section className="py-10 px-4 sm:px-8 max-w-7xl mx-auto border-b border-slate-200/80">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs text-slate-500">Active principal on record</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 tabular-nums">₹95.40 Cr</p>
+            <p className="mt-1 text-[11px] text-slate-400">Across verified technical institutes</p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Experience Every Stakeholder Lens
+
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs text-slate-500">Registered bodies</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 tabular-nums">4 Key institutions</p>
+            <p className="mt-1 text-[11px] text-slate-400">Coastal, Highland, Apex, Metro</p>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs text-slate-500">Ledger verification</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 font-mono">SHA-256</p>
+            <p className="mt-1 text-[11px] text-slate-400">Append-only digest chain</p>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs text-slate-500">Document vault security</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900">AES-256-GCM</p>
+            <p className="mt-1 text-[11px] text-slate-400">Encrypted before physical storage</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Stakeholder Personas / One-Click Launch */}
+      <section id="quick-roles" className="py-14 px-4 sm:px-8 max-w-7xl mx-auto border-b border-slate-200/80">
+        <div className="max-w-xl text-left mb-8">
+          <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
+            Stakeholder access personas
           </h2>
-          <p className="mt-2 text-slate-600 text-xs sm:text-sm">
-            Select any official or institutional persona below for immediate, 1-click authentication without typing credentials.
+          <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+            Select any official or institutional workspace below to evaluate role-governed capabilities directly.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {QUICK_ROLES.map((role) => {
             const RoleIcon = role.icon;
             const isLoggingIn = loggingInEmail === role.email;
@@ -336,29 +343,24 @@ export function HomePage() {
             return (
               <div
                 key={role.email}
-                className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between hover:border-blue-400 hover:shadow-md transition-all group"
+                className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between transition-colors hover:border-slate-400"
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold border ${role.badgeTone}`}>
+                  <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                    <span className="text-[11px] font-medium text-slate-600">
                       {role.roleTag}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Demo@12345</span>
+                    <span className="text-[10px] font-mono text-slate-400">Demo@12345</span>
                   </div>
 
-                  <div className="flex items-center gap-2.5 mt-2">
-                    <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 ${role.iconBg} ${role.iconColor}`}>
-                      <RoleIcon className="size-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                        {role.title}
-                      </h3>
-                      <p className="text-[10px] text-blue-600 font-semibold">{role.institutionOrBureau}</p>
-                    </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <RoleIcon className="size-4 text-slate-500 shrink-0" />
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      {role.title}
+                    </h3>
                   </div>
 
-                  <p className="text-xs text-slate-500 mt-3 leading-relaxed">
+                  <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                     {role.description}
                   </p>
                 </div>
@@ -368,14 +370,17 @@ export function HomePage() {
                     type="button"
                     disabled={loggingInEmail !== null}
                     onClick={() => handleQuickLaunch(role.email, role.workspacePath)}
-                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-50 hover:bg-[#2563EB] text-slate-700 hover:text-white border border-slate-200 hover:border-blue-600 font-bold text-xs transition-all shadow-xs"
+                    className="w-full inline-flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-900 hover:text-white text-slate-700 font-medium text-xs transition-colors"
                   >
                     {isLoggingIn ? (
-                      <RefreshCw className="size-3.5 animate-spin text-blue-600" />
+                      <span className="inline-flex items-center gap-2">
+                        <RefreshCw className="size-3.5 animate-spin" />
+                        <span>Authenticating...</span>
+                      </span>
                     ) : (
                       <>
-                        <span>Launch as {role.title.split(" ")[0]}</span>
-                        <ArrowRight className="size-3.5" />
+                        <span>Open workspace</span>
+                        <ArrowRight className="size-3 text-slate-400" />
                       </>
                     )}
                   </button>
@@ -386,115 +391,99 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Technical Architecture & Trust Framework */}
-      <section id="features" className="relative z-10 py-14 px-4 sm:px-8 max-w-7xl mx-auto border-t border-slate-200/80">
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold mb-3">
-            <Layers className="size-3.5 text-blue-600" />
-            <span>Built to SIH26265 Technical Specifications</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Comprehensive Statutory Security Architecture
+      {/* Technical Architecture */}
+      <section id="features" className="py-14 px-4 sm:px-8 max-w-7xl mx-auto border-b border-slate-200/80">
+        <div className="max-w-xl text-left mb-8">
+          <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
+            Statutory architecture &amp; safeguards
           </h2>
-          <p className="mt-2 text-slate-600 text-xs sm:text-sm">
-            Four foundational cryptographic and optical scrutiny guarantees protecting government custody.
+          <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+            Engineered to fulfill AICTE Problem Statement SIH26265 specifications without dependency on unverified claims.
           </p>
         </div>
 
-        {/* 4 Pillars Matching Bottom Trust Badges */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <div className="size-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
-              <Lock className="size-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Encrypted Vault</h3>
-            <p className="text-xs font-semibold text-emerald-600 mt-0.5">AES-256-GCM Secure Storage</p>
-            <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-              Every document is encrypted client-side before S3/local vault storage with unique IVs and authenticated tags, eliminating plain-text credential leaks.
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <Lock className="size-4 text-slate-600 mb-2" />
+            <h3 className="text-sm font-semibold text-slate-900">Encrypted vault</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Documents are encrypted client-side using AES-256-GCM before object store ingestion. Keys remain strictly within the custody service.
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <div className="size-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3">
-              <Sparkles className="size-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Smart OCR Radar</h3>
-            <p className="text-xs font-semibold text-purple-600 mt-0.5">Multi-Layer Text Extraction</p>
-            <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-              Cross-validates declared FDR number, lien beneficiary, amount, and maturity date against certificate text with visual discrepancy highlights.
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <Layers className="size-4 text-slate-600 mb-2" />
+            <h3 className="text-sm font-semibold text-slate-900">Optical discrepancy radar</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Multi-layer OCR compares declared instrument numbers, lien beneficiary, amount, and maturity dates against certificate scans.
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <div className="size-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-3">
-              <ShieldCheck className="size-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Digital Signatures</h3>
-            <p className="text-xs font-semibold text-amber-600 mt-0.5">pyHanko CMS &amp; Ed25519</p>
-            <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-              RFC 3161 cryptographic timestamping and high-density 2D QR envelope decoding to verify bank authenticity and seal against tampering.
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <ShieldCheck className="size-4 text-slate-600 mb-2" />
+            <h3 className="text-sm font-semibold text-slate-900">pyHanko CMS verification</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Validates RFC 3161 cryptographic timestamps and Adobe CMS digital signatures to verify issuing bank authenticity and seal against tampering.
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <div className="size-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
-              <Shield className="size-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Tamper Evident</h3>
-            <p className="text-xs font-semibold text-rose-600 mt-0.5">Append-Only Audit Ledger</p>
-            <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-              Continuous SHA-256 digest chaining linking every action, scrutiny review, and tripartite release authorization into an immutable ledger.
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <Fingerprint className="size-4 text-slate-600 mb-2" />
+            <h3 className="text-sm font-semibold text-slate-900">Immutable hash chain</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Continuous SHA-256 digest chaining links every submission, scrutiny observation, and release sign-off into an unalterable audit ledger.
             </p>
           </div>
         </div>
 
-        {/* Multi-Bureau Tripartite Release Section */}
-        <div id="forensics" className="mt-10 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+        {/* Tripartite Clearance Matrix */}
+        <div id="clearances" className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
-              <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-bold text-blue-700 mb-3">
-                Statutory Release Gateways
-              </span>
-              <h3 className="text-2xl font-bold text-slate-900">
-                Multi-Bureau Tripartite Clearance Matrix
+              <p className="text-xs font-medium text-slate-500 mb-1">Release governance</p>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Multi-bureau tripartite clearance matrix
               </h3>
-              <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Security deposits cannot be unpledged or refunded unilaterally. Release cases enforce independent clearances across all relevant statutory divisions before the Competent Authority can digitally authorize a discharge.
+              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                Security deposits cannot be unpledged unilaterally. Release cases enforce independent clearance decisions from all relevant statutory divisions before the Competent Authority can digitally sign a discharge order.
               </p>
 
-              <div className="mt-5 space-y-2.5 text-xs text-slate-700">
-                <div className="flex items-center gap-2.5">
-                  <div className="size-2 rounded-full bg-blue-600 shrink-0" />
-                  <span className="font-bold text-slate-900">Finance Bureau:</span> Verified interest accruals &amp; account reconciliation.
+              <div className="mt-4 space-y-2 text-xs text-slate-700">
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-slate-900" />
+                  <span className="font-medium text-slate-900">Finance Bureau:</span>
+                  <span className="text-slate-500">Verified interest accruals and account reconciliation.</span>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="size-2 rounded-full bg-blue-600 shrink-0" />
-                  <span className="font-bold text-slate-900">Public Grievance Redressal (PGRC):</span> Zero pending student fee or salary disputes.
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-slate-900" />
+                  <span className="font-medium text-slate-900">PGRC Cell:</span>
+                  <span className="text-slate-500">Zero pending student fee or salary grievances.</span>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="size-2 rounded-full bg-blue-600 shrink-0" />
-                  <span className="font-bold text-slate-900">Vigilance Division:</span> Clean standing with no open inquiries or show-cause notices.
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-slate-900" />
+                  <span className="font-medium text-slate-900">Chief Vigilance Officer:</span>
+                  <span className="text-slate-500">Clean standing with no active show-cause notices.</span>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-900 text-white p-5 shadow-inner">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-[11px] font-mono text-slate-400">
-                <span>SIMULATED_LEDGER_CHAIN</span>
-                <span className="text-emerald-400 font-semibold">VERIFIED_STABLE</span>
+            <div id="ledger" className="rounded-lg border border-slate-200 bg-slate-900 text-white p-4 font-mono text-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-[11px] text-slate-400">
+                <span>LEDGER_DIGEST_CHAIN</span>
+                <span className="text-emerald-400">VERIFIED</span>
               </div>
-              <div className="mt-3 space-y-2.5 font-mono text-[11px] text-slate-300">
-                <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60">
-                  <p className="text-blue-300 font-semibold">[BLOCK #0849] FDR_CREATION</p>
-                  <p className="text-slate-400 text-[10px] truncate">PrevHash: 7f8a9e01bc...48a2 &bull; Hash: 99c301ab42...f01d</p>
+              <div className="mt-3 space-y-2 text-[11px]">
+                <div className="p-2 rounded bg-slate-800/80 border border-slate-700/60">
+                  <p className="text-slate-200">[BLOCK 0849] FDR_REGISTRATION</p>
+                  <p className="text-slate-400 text-[10px] truncate">hash: 99c301ab42...f01d</p>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60">
-                  <p className="text-purple-300 font-semibold">[BLOCK #0850] OCR_EXTRACTION_MATCH</p>
-                  <p className="text-slate-400 text-[10px] truncate">PrevHash: 99c301ab42...f01d &bull; Hash: a1b2c3d4e5...6789</p>
+                <div className="p-2 rounded bg-slate-800/80 border border-slate-700/60">
+                  <p className="text-slate-200">[BLOCK 0850] OCR_EVIDENCE_MATCH</p>
+                  <p className="text-slate-400 text-[10px] truncate">hash: a1b2c3d4e5...6789</p>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60">
-                  <p className="text-emerald-300 font-semibold">[BLOCK #0851] TRIPARTITE_CLEARANCE_PASSED</p>
-                  <p className="text-slate-400 text-[10px] truncate">PrevHash: a1b2c3d4e5...6789 &bull; Hash: edf0123456...7890</p>
+                <div className="p-2 rounded bg-slate-800/80 border border-slate-700/60">
+                  <p className="text-slate-200">[BLOCK 0851] TRIPARTITE_CLEARANCE_PASSED</p>
+                  <p className="text-slate-400 text-[10px] truncate">hash: edf0123456...7890</p>
                 </div>
               </div>
             </div>
@@ -503,27 +492,23 @@ export function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-200 bg-white py-8 px-4 sm:px-8 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded-xl bg-slate-900/5 border border-slate-200 p-0.5 flex items-center justify-center shrink-0">
-              <img
-                src="/assets/nidhisetu-logo.png"
-                alt="NidhiSetu Shield Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900">NidhiSetu</p>
-              <p className="text-[10px] text-slate-400">All India Council for Technical Education &bull; SIH26265</p>
-            </div>
+      <footer className="py-8 px-4 sm:px-8 max-w-7xl mx-auto text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <div className="size-6 rounded bg-slate-100 border border-slate-200 p-0.5 flex items-center justify-center">
+            <img
+              src="/assets/nidhisetu-logo.png"
+              alt="NidhiSetu Shield Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
-
-          <div className="text-center md:text-right text-[11px] text-slate-400 max-w-lg">
-            Demonstration prototype. All institutions, instruments, clearances and bank responses are synthetic.
-            Bank verification is simulated and does not move funds. AES-256-GCM vault active.
-          </div>
+          <span className="font-medium text-slate-800">NidhiSetu</span>
+          <span>&bull;</span>
+          <span>AICTE Regulation Bureau (SIH26265)</span>
         </div>
+
+        <p className="text-[11px] text-slate-400">
+          Demonstration build with synthetic instruments and simulated bank integration.
+        </p>
       </footer>
     </div>
   );

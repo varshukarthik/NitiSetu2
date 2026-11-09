@@ -1,9 +1,7 @@
-// Application shell matching the portal UI design.
-// Dark navy sidebar with KoshSetu branding, monument bottom card,
-// integrated top bar with environment pills, search, notification counter, and user profile.
+// Application shell: Unslopped statutory design.
+// Quiet graphite navigation rail, crisp top bar, no marketing decoration.
 
 import {
-  ArrowRight,
   Bell,
   ChevronDown,
   LogOut,
@@ -40,17 +38,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const notificationsPath =
     session.workspace === "institution" ? "/institution/notifications" : "/official/notifications";
 
-  // Derive initial from display name or role
   const userInitial = session.display_name ? session.display_name.charAt(0).toUpperCase() : "S";
 
   const navigation = (
-    <nav aria-label="Primary navigation" className="space-y-6 px-3 py-4">
+    <nav aria-label="Primary navigation" className="space-y-5 px-3 py-4">
       {sections.map((section) => (
         <div key={section.heading}>
-          <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <p className="px-3 pb-1.5 text-[11px] font-medium text-slate-400">
             {section.heading}
           </p>
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
             {section.items
               .filter((item) => !item.capability || session.capabilities.includes(item.capability))
               .map((item) => (
@@ -59,18 +56,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     to={item.to}
                     end={item.to.endsWith("/new") || item.to.endsWith("overview")}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                      `flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                         isActive
-                          ? "bg-[#2563EB] text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-300 hover:bg-white/10 hover:text-white"
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
                       }`
                     }
                   >
-                    <item.icon aria-hidden="true" className="size-4 shrink-0" />
+                    <item.icon aria-hidden="true" className="size-4 shrink-0 text-slate-400" />
                     <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                    {item.badgeKey === "notifications" && (
-                      <span className="rounded-full bg-[#f97316] px-1.5 py-0.2 text-[10px] font-bold text-white shadow-sm">
-                        {unread.data?.unread ?? 16}
+                    {item.badgeKey === "notifications" && (unread.data?.unread ?? 0) > 0 && (
+                      <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] font-mono text-slate-200">
+                        {unread.data?.unread}
                       </span>
                     )}
                   </NavLink>
@@ -83,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4f7fc] lg:grid lg:grid-cols-[250px_minmax(0,1fr)]">
+    <div className="min-h-screen bg-[#f8fafc] lg:grid lg:grid-cols-[250px_minmax(0,1fr)]">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
@@ -91,54 +88,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop Left Sidebar */}
       <aside
         aria-label="Portal sections"
-        className="hidden min-h-screen flex-col bg-[#0B132B] text-white lg:flex border-r border-slate-800/60"
+        className="hidden min-h-screen flex-col bg-[#0f172a] text-white lg:flex border-r border-slate-800"
       >
         {/* Brand Header */}
-        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl overflow-hidden bg-slate-900/60 p-1 border border-white/10 shadow-md">
+        <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-4">
+          <div className="size-8 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 p-1 flex items-center justify-center shrink-0">
             <img
               src="/assets/nidhisetu-logo.png"
-              alt="NidhiSetu Shield Logo"
+              alt="NidhiSetu Shield"
               className="w-full h-full object-contain"
             />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-base font-bold tracking-tight text-white font-sans">NidhiSetu</p>
-            <p className="truncate text-[10px] text-slate-400">Security deposit &amp; FDR portal</p>
+            <p className="truncate text-sm font-semibold tracking-tight text-white">NidhiSetu</p>
+            <p className="truncate text-[10px] text-slate-400">AICTE Security Deposit Portal</p>
           </div>
         </div>
 
         {/* Navigation links */}
         <div className="flex-1 overflow-y-auto">{navigation}</div>
 
-        {/* Sidebar Bottom Monument Card */}
-        <div className="p-3">
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#162544] to-[#0d172a] p-3.5 flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-2.5">
-              <div className="size-9 rounded-lg overflow-hidden bg-slate-900/60 border border-white/10 flex items-center justify-center shrink-0">
-                <img
-                  src="/assets/sidebar-monument.png"
-                  alt="AICTE Monument"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white leading-tight">Secure Deposits</p>
-                <p className="text-[10px] text-slate-300">Transparent Governance</p>
-              </div>
-            </div>
-
-            <Link
-              to="/official/fdrs"
-              className="size-7 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-md transition-colors"
-              title="View all deposits"
-            >
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
+        {/* Quiet System Footnote */}
+        <div className="border-t border-slate-800 p-4 text-[11px] text-slate-400">
+          <p className="font-medium text-slate-300">Regulation Bureau</p>
+          <p className="text-slate-500 mt-0.5 font-mono text-[10px]">SIH26265 &bull; Prototype</p>
         </div>
       </aside>
 
@@ -146,24 +119,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {drawerOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div
-            className="flex w-72 max-w-[85%] flex-col bg-[#0B132B] text-white shadow-2xl"
+            className="flex w-72 max-w-[85%] flex-col bg-[#0f172a] text-white shadow-xl"
             role="dialog"
             aria-modal="true"
             aria-label="Portal sections"
           >
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
               <div className="flex items-center gap-2.5">
                 <img
                   src="/assets/nidhisetu-logo.png"
-                  alt="NidhiSetu Shield Logo"
+                  alt="NidhiSetu"
                   className="size-6 object-contain"
                 />
-                <span className="text-sm font-bold tracking-tight text-white">NidhiSetu</span>
+                <span className="text-sm font-semibold text-white">NidhiSetu</span>
               </div>
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
+                className="rounded p-1 text-slate-400 hover:text-white"
               >
                 <X aria-hidden="true" className="size-5" />
               </button>
@@ -173,44 +146,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             aria-label="Close navigation"
-            className="flex-1 bg-black/60 backdrop-blur-xs"
+            className="flex-1 bg-black/40"
             onClick={() => setDrawerOpen(false)}
           />
         </div>
       )}
 
-      {/* Right Content Area */}
+      {/* Main Column */}
       <div className="flex min-w-0 flex-col">
-        {/* Unified Top Bar Header */}
-        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 px-4 py-2 sm:px-6 backdrop-blur-md">
+        {/* Top Header */}
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white px-4 py-2.5 sm:px-6">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Mobile Toggle & Demo Environment Pills */}
+            {/* Left: Mobile Toggle & Quiet Environment Status */}
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
-                className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+                className="rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:bg-slate-100 lg:hidden"
               >
                 <Menu aria-hidden="true" className="size-4" />
                 <span className="sr-only">Open navigation</span>
               </button>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded bg-orange-100 text-orange-800 border border-orange-200/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
-                  {meta?.environment === "production" ? "Restricted" : "Demo Environment"}
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 font-medium text-slate-700 text-[11px]">
+                  {meta?.environment === "production" ? "Restricted" : "Demo environment"}
                 </span>
-                <span className="rounded bg-orange-100 text-orange-800 border border-orange-200/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 font-medium text-slate-700 text-[11px]">
                   Bank: Simulated
                 </span>
-                <span className="hidden xl:inline text-xs text-slate-500 truncate max-w-md">
-                  Simulated bank responses and synthetic records. Not connected to any bank or AICTE production system.
+                <span className="hidden xl:inline text-[11px] text-slate-400 truncate max-w-sm">
+                  Synthetic records for AICTE regulatory demonstration.
                 </span>
               </div>
             </div>
 
-            {/* Right: Search, Notification Bell & User Pill */}
+            {/* Right: Search, Notifications & Profile */}
             <div className="flex items-center gap-3 shrink-0">
-              {/* Search input */}
               <form
                 role="search"
                 className="hidden md:flex items-center"
@@ -229,55 +201,55 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     type="search"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search institution, AICTE id, bank, instrument..."
-                    className="w-64 lg:w-80 rounded-full border border-slate-200 bg-slate-50 py-1.5 pl-8.5 pr-4 text-xs text-slate-700 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    placeholder="Search institution, AICTE ID, bank..."
+                    className="w-64 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8.5 pr-3 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-colors"
                   />
                 </div>
               </form>
 
-              {/* Notification Bell */}
+              {/* Notification Link */}
               <Link
                 to={notificationsPath}
-                className="relative p-2 rounded-full text-slate-600 hover:bg-slate-100 transition-colors"
+                className="relative p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
                 title="Notifications"
               >
-                <Bell aria-hidden="true" className="size-4.5" />
-                <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center shadow-sm">
-                  {unread.data?.unread ?? 16}
-                </span>
+                <Bell aria-hidden="true" className="size-4" />
+                {(unread.data?.unread ?? 0) > 0 && (
+                  <span className="absolute top-1 right-1 size-1.5 rounded-full bg-slate-800" />
+                )}
               </Link>
 
-              {/* User Avatar & Menu */}
+              {/* User Dropdown */}
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2.5 p-1 rounded-full hover:bg-slate-100 transition-colors text-left"
+                  className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-50 transition-colors text-left"
                 >
-                  <div className="size-8.5 rounded-full bg-[#3b82f6] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                  <div className="size-7 rounded-md bg-slate-800 text-white font-medium text-xs flex items-center justify-center">
                     {userInitial}
                   </div>
-                  <div className="hidden sm:block">
-                    <p className="text-xs font-bold text-slate-800 leading-tight">
-                      {session.display_name || "Scrutiny Officer (Regulatory)"}
+                  <div className="hidden sm:block text-xs">
+                    <p className="font-medium text-slate-800 leading-tight">
+                      {session.display_name}
                     </p>
-                    <p className="text-[10px] text-slate-500 leading-tight">
-                      {session.roles.map((r) => titleCase(r)).join(", ") || "Scrutiny Officer"}
+                    <p className="text-[11px] text-slate-400 leading-tight">
+                      {session.roles.map((r) => titleCase(r)).join(", ")}
                     </p>
                   </div>
-                  <ChevronDown className="size-3.5 text-slate-400 hidden sm:block" />
+                  <ChevronDown className="size-3 text-slate-400 hidden sm:block" />
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-50">
-                    <div className="p-2 border-b border-slate-100 sm:hidden">
-                      <p className="text-xs font-bold text-slate-800">{session.display_name}</p>
-                      <p className="text-[10px] text-slate-500">{session.email}</p>
+                  <div className="absolute right-0 mt-1.5 w-48 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg z-50">
+                    <div className="px-2 py-1.5 border-b border-slate-100 sm:hidden text-xs">
+                      <p className="font-medium text-slate-800">{session.display_name}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{session.email}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => signOut().then(() => navigate("/"))}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded transition-colors text-left"
                     >
                       <LogOut className="size-3.5" />
                       <span>Sign out</span>
@@ -289,8 +261,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main id="main-content" className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8">
+        {/* Content Viewport */}
+        <main id="main-content" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </main>
       </div>
